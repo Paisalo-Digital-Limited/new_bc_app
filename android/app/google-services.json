@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "339350105359",
+    "project_id": "bc-app-pdl2024",
+    "storage_bucket": "bc-app-pdl2024.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339350105359:android:0ec7ebcdb64e83862b627a",
+        "android_client_info": {
+          "package_name": "com.bcapp.paisalo.bcapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2WxjF6mkPd0qLNk1nxHXAxiapHQkzLCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339350105359:android:c3806a74c56e74762b627a",
+        "android_client_info": {
+          "package_name": "com.paisalo.new_bc_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2WxjF6mkPd0qLNk1nxHXAxiapHQkzLCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
