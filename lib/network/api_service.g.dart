@@ -239,6 +239,73 @@ class _ApiService implements ApiService {
   }
 
   @override
+  Future<CommonResponseModel> uploadDepositeData(
+    String CspName,
+    String cspCode,
+    String amount,
+    String reqType,
+    String isApproved,
+    String approvedBy,
+    File file,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry(
+      'CspName',
+      CspName,
+    ));
+    _data.fields.add(MapEntry(
+      'CspCode',
+      cspCode,
+    ));
+    _data.fields.add(MapEntry(
+      'Amount',
+      amount,
+    ));
+    _data.fields.add(MapEntry(
+      'ReqType',
+      reqType,
+    ));
+    _data.fields.add(MapEntry(
+      'IsApproved',
+      isApproved,
+    ));
+    _data.fields.add(MapEntry(
+      'ApprovedBy',
+      approvedBy,
+    ));
+    _data.files.add(MapEntry(
+      'Receipt',
+      MultipartFile.fromFileSync(
+        file.path,
+        filename: file.path.split(Platform.pathSeparator).last,
+      ),
+    ));
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CommonResponseModel>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+      contentType: 'multipart/form-data',
+    )
+            .compose(
+              _dio.options,
+              'BCWithdrawl/InsertWithdrawlRequestsReceipt',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CommonResponseModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
   Future<WithdrawalAndDepsitModel> getWithdrawalAndDepositHistory(
     String bearerToken,
     String CspCode,

@@ -1,10 +1,13 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_container.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
+import 'dart:io';
 
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
@@ -74,6 +77,16 @@ class FundDipositePage extends StatefulWidget {
 }
 
 class _FundDipositePageState extends State<FundDipositePage> {
+  XFile? _image;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _image = pickedImage;
+    });
+  }
   AppColors appColors = new AppColors();
   TextEditingController depositeAmountController = new TextEditingController();
   TextEditingController cspCodeController = new TextEditingController();
@@ -133,25 +146,33 @@ class _FundDipositePageState extends State<FundDipositePage> {
               ),
 
               SizedBox(height: 30,),
-              // Text("DEPOSIT SLIP",style: TextStyle(color: Colors.white,fontSize: 17),),
-              // Container(
-              //   margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
-              //   height: 50,
-              //   child:CupertinoTextField(
-              //     padding: const EdgeInsets.symmetric(horizontal: 16),
-              //     decoration: BoxDecoration(
-              //         color: Colors.white,
-              //         borderRadius: BorderRadius.all(Radius.circular(2))
-              //     ),
-              //     clearButtonMode: OverlayVisibilityMode.editing,
-              //     keyboardType: TextInputType.visiblePassword,
-              //     obscureText: true,
-              //     maxLines: 1,
-              //     style: TextStyle(fontSize: 17),
-              //     placeholder: 'UPLOAD SLIP LESS THAN 1MB',
-              //   ),
-              // ),
-              // SizedBox(height: 40,),
+              Text("DEPOSIT SLIP",style: TextStyle(color: Colors.white,fontSize: 17),),
+            GestureDetector(child:        Container(
+              color: Colors.white,
+              margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
+              padding: EdgeInsets.only(left: 16),
+              height: 50,
+              child:_image==null?Row(
+                children: [
+                  Text("UPLOAD IMAGE LESS THAN 1 MB",style: TextStyle(color: Colors.grey.shade400,fontSize: 17),),
+                  SizedBox(width: 8,),
+                  Icon(Icons.cloud_upload_outlined,color: Colors.grey.shade400,)
+
+                ],
+              ):Row(
+                children: [
+                  Text("${_image!.name}",style: TextStyle(color: Colors.grey.shade400,fontSize: 17),),
+                  SizedBox(width: 8,),
+                  Icon(Icons.file_copy,color: appColors.mainAppColor,)
+
+                ],
+              ),
+            ),onTap: (){
+              _pickImage();
+
+
+            },),
+              SizedBox(height: 40,),
 
           GestureDetector(
             child: Container(
@@ -161,7 +182,22 @@ class _FundDipositePageState extends State<FundDipositePage> {
                 child:Center(child: Text("SEND REQUEST",style: TextStyle(color:  appColors.mainAppColor,),))
             ),
             onTap: (){
-              insertDepositRecord(widget.loginResponse.data.token,cspCodeController.text,depositeAmountController.text);
+              if(_image==null){
+                final snackBar = SnackBar(
+                  content: Text('Please upload slip'),
+                  duration: Duration(seconds: 3),
+                  action: SnackBarAction(
+                    label: 'Close',
+                    onPressed: () {
+                      // Perform some action when 'Close' is pressed
+                    },
+                  ),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              }else{
+                insertDepositRecord(widget.loginResponse.data.token,widget.loginResponse.data.name,cspCodeController.text,depositeAmountController.text,_image);
+              }
+
             },
           )
               ,
@@ -174,14 +210,14 @@ class _FundDipositePageState extends State<FundDipositePage> {
 
    ;
   }
-  showAlertDialog(BuildContext context) {
+  showAlertDialog(BuildContext context,String msg) {
 
     QuickAlert.show(
       context: context,
       type: QuickAlertType.success,
       confirmBtnColor: appColors.mainAppColor,
       title: "Fund Deposit!!",
-      text: 'Request sent successfully!!',
+      text: msg,
       showConfirmBtn: true,
       onConfirmBtnTap: (){
         Navigator.of(context).pop();
@@ -189,12 +225,19 @@ class _FundDipositePageState extends State<FundDipositePage> {
       }
     );
   }
-  Future<void> insertDepositRecord(String token,String cspCode, String amount) async {
+  Future<void> insertDepositRecord(String token, String name,String cspCode, String amount,XFile? image) async {
+
+    final fileBytes = await image!.readAsBytes();
+    final multipartFile = MultipartFile.fromBytes(
+      fileBytes,
+      filename: "Receipt"
+    );
     final api = Provider.of<ApiService>(context, listen: false);
 
-    return await api.uploadWithDrawalData( "Bearer $token", cspCode.trim(),amount.trim(),"D", "0" ,"1").then((value) async {
-      if(value.data==1){
-        showAlertDialog( context);
+    File file = File(image!.path);
+    return await api.uploadDepositeData( name, cspCode.trim(),amount.trim(),"D", "0" ,"1",file).then((value) async {
+      if(value.statusCode==200){
+        showAlertDialog( context,value.message);
       }
 
     }).catchError((error){

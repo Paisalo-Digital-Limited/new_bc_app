@@ -1,8 +1,7 @@
-import 'dart:convert';
-import 'dart:ffi';
-
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:retrofit/http.dart';
 
@@ -60,6 +59,10 @@ abstract class ApiService{
 
   @POST("BCWithdrawl/InsertWithdrawlRequests")
   Future<CommonResponseModelInt> uploadWithDrawalData(@Header("Authorization") String bearerToken,@Field("cspCode") String cspCode,@Field("amount") String amount,@Field("reqType") String reqType,@Field("isApproved") String isApproved,@Field("approvedBy") String approvedBy);
+
+  @POST("BCWithdrawl/InsertWithdrawlRequestsReceipt")
+  @MultiPart()
+  Future<CommonResponseModel> uploadDepositeData(@Part(name: "CspName") String CspName,@Part(name: "CspCode") String cspCode,@Part(name: "Amount") String amount,@Part(name: "ReqType") String reqType,@Part(name: "IsApproved") String isApproved,@Part(name: "ApprovedBy") String approvedBy,  @Part(name: "Receipt") File file);
 
 
   @GET("BCWithdrawl/GetWithdrawlRequests")
