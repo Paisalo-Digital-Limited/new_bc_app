@@ -163,7 +163,7 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<CommonResponseModel> updateGsmid(
+  Future<CommonResponseModelInt> updateGsmid(
     String bearerToken,
     String cspCode,
     String gsmid,
@@ -177,7 +177,7 @@ class _ApiService implements ApiService {
       'GSMId': gsmid,
     };
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<CommonResponseModel>(Options(
+        _setStreamType<CommonResponseModelInt>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
@@ -193,7 +193,7 @@ class _ApiService implements ApiService {
               _dio.options.baseUrl,
               baseUrl,
             ))));
-    final value = CommonResponseModel.fromJson(_result.data!);
+    final value = CommonResponseModelInt.fromJson(_result.data!);
     return value;
   }
 
@@ -441,6 +441,99 @@ class _ApiService implements ApiService {
               baseUrl,
             ))));
     final value = CspAnnualReport.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<LeaderBoardDataResponse> getLeaderBoardData() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<LeaderBoardDataResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetTopCommissions',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = LeaderBoardDataResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<CommisionDetailsResponse> getCommsionDetails(
+    String fromdate,
+    String todate,
+    String koId,
+    String areaType,
+    String isLive,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'fromDate': fromdate,
+      r'todate': todate,
+      r'koId': koId,
+      r'areaType': areaType,
+      r'isLive': isLive,
+    };
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CommisionDetailsResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetCommissionCount',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CommisionDetailsResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<GetTaskSlabDetailsResponse> getTaskSlabDetails() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<GetTaskSlabDetailsResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetTaskSlabDetails',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = GetTaskSlabDetailsResponse.fromJson(_result.data!);
     return value;
   }
 

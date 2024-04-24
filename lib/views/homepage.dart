@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:io';
+import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
+import 'package:new_bc_app/views/LeaderBoardItemDetails.dart';
 import 'package:new_bc_app/views/achiverpage.dart';
 import 'package:new_bc_app/views/csp_annual_report.dart';
 import 'package:new_bc_app/views/requestforfundtransfer.dart';
@@ -15,8 +17,14 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../model/commissionDetailsResponse.dart';
+import '../model/leaderBoardDataResponse.dart';
+import '../model/leaderBoardDataResponse.dart';
+import '../model/leaderBoardDataResponse.dart';
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
 import 'package:gif/gif.dart';
@@ -69,9 +77,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
    _pages = [
     HomePageview(widget.loginResponse,widget.username),
-    LeaderBoard(),
+    LeaderBoard(widget.loginResponse,widget.username),
     ServiceAndSchemeList(widget.loginResponse,widget.username),
-    EarningPage(),
+    EarningPage(widget.username),
     ProfilePage( loginResponse: widget.loginResponse,username:widget.username),
     ];
     super.initState();
@@ -337,10 +345,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Container(
+                      width: MediaQuery.of(context).size.width-38,
                       height: 45,
                       color: Colors.white,
                       padding: EdgeInsets.only(left: 10, right: 10),
                       child: Row(
+
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
@@ -532,7 +542,8 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 class EarningPage extends StatefulWidget {
-  const EarningPage({super.key});
+  final String userName;
+  const EarningPage(this.userName);
 
   @override
   State<EarningPage> createState() => _EarningPageState();
@@ -540,12 +551,60 @@ class EarningPage extends StatefulWidget {
 
 class _EarningPageState extends State<EarningPage> {
   String targettedAmount="";
+  int isLoading=0;
+  late CommisionDetailsResponse commisionDetailsResponse;
   @override
   void initState() {
-    // TODO: implement initState
+    getCommisionDetail();
     super.initState();
     getTargetAmount();
   }
+  String getFirstDateOfMonth() {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    return '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
+  }
+
+  String getCurrentDate() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<Null> getCommisionDetail() {
+    String  fromDate = getFirstDateOfMonth();
+    String  toDate = getCurrentDate();
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getCommsionDetails(fromDate,toDate,"1A990128","1","true")
+        .then((value) {
+
+      if (value.statusCode==200) {
+        setState(() {
+
+          commisionDetailsResponse=value;
+          isLoading=1;
+
+        });
+
+      }else{
+        setState(() {
+
+        });
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -557,7 +616,7 @@ class _EarningPageState extends State<EarningPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appColors.mainAppColor,
-      body: SingleChildScrollView(
+      body: isLoading==0?Center(child:CircularProgressIndicator(color: Colors.white,) ,): SingleChildScrollView(
         child: Center(
           child: Column(
             children: [
@@ -593,13 +652,20 @@ class _EarningPageState extends State<EarningPage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            '₹ 0',
-                            style: TextStyle(
-                                fontSize: 40,
-                                fontFamily: 'Visbybold',
-                                color: Colors.white),
-                          ),
+                         GestureDetector(onTap: (){
+                           Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (context) => LeaderBoardItemDetails(widget.userName),
+                               )
+                           );
+                         },child:  Text(
+                           '₹ ${commisionDetailsResponse.data.myIncomeResult}',
+                           style: TextStyle(
+                               fontSize: 40,
+                               fontFamily: 'Visbybold',
+                               color: Colors.white),
+                         ),),
                           SizedBox(
                             width: 8,
                           ),
@@ -804,13 +870,14 @@ class _EarningPageState extends State<EarningPage> {
                                               BorderRadius.circular(10.0),
                                         ),
                                         child: Container(
+                                          height: 400,
                                             color: Colors.white,
                                             // height: 400,
                                             child: TableCalendar(
                                               firstDay:
                                                   DateTime.utc(2023, 1, 1),
                                               lastDay:
-                                                  DateTime.utc(2023, 12, 31),
+                                                  DateTime.utc(2030, 12, 31),
                                               focusedDay: _focusedDay,
                                               calendarFormat: _calendarFormat,
                                               selectedDayPredicate: (day) {
@@ -1774,7 +1841,9 @@ class WeeklyView extends StatelessWidget {
 }
 
 class LeaderBoard extends StatefulWidget {
-  const LeaderBoard({super.key});
+  final LoginResponse loginResponse;
+  final String username;
+  LeaderBoard(this.loginResponse, this.username);
 
   @override
   State<LeaderBoard> createState() => _LeaderBoardState();
@@ -1787,28 +1856,12 @@ class _LeaderBoardState extends State<LeaderBoard>
   late GifController _controllerGif;
 
   final CarouselController _controller = CarouselController();
-  final List<Map<String, dynamic>> earningsData = [
-    {'name': 'Aarav Kumar', 'earnings': 80000},
-    {'name': 'Aditya Sharma', 'earnings': 75000},
-    {'name': 'Arjun Singh', 'earnings': 70000},
-    {'name': 'Anirudh Mishra', 'earnings': 65000},
-    {'name': 'Aakash Patel', 'earnings': 60000},
-    {'name': 'Ayush Gupta', 'earnings': 55000},
-    {'name': 'Abhinav Yadav', 'earnings': 50000},
-    {'name': 'Amit Verma', 'earnings': 45000},
-    {'name': 'Aryan Shah', 'earnings': 40000},
-    {'name': 'Adarsh Dubey', 'earnings': 35000},
-    {'name': 'Aniket Malhotra', 'earnings': 30000},
-    {'name': 'Anshul Chauhan', 'earnings': 25000},
-    {'name': 'Aayush Srivastava', 'earnings': 20000},
-    {'name': 'Arnav Tiwari', 'earnings': 15000},
-    {'name': 'Amitabh Rajput', 'earnings': 10000},
-    // Add more data as needed
-  ];
+   LeaderBoardDataResponse earningsData=LeaderBoardDataResponse(statusCode: 0, message: "", data: []);
   @override
   void initState() {
     super.initState();
     _controllerGif = GifController(vsync: this);
+    _getLeaderBoardData();
   }
 
   @override
@@ -1833,7 +1886,37 @@ class _LeaderBoardState extends State<LeaderBoard>
       ),
     );
   }
+  Future<void> _getLeaderBoardData() async {
 
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getLeaderBoardData()
+        .then((value) {
+
+      if (value.data.length>1) {
+        setState(() {
+          earningsData=value;
+        });
+      }else{
+        setState(() {
+
+        });
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1941,7 +2024,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                   ],
                 ),
               ),
-              Stack(
+              earningsData.statusCode!=0?  Stack(
                 alignment: Alignment.topCenter,
                 children: [
                   Container(
@@ -1973,7 +2056,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                           child: ListView.builder(
                             itemCount: 10,
                             itemBuilder: (context, index) {
-                              final item = earningsData[index];
+                              final item = earningsData.data[index];
                               final bool isFirstItem = index == 0;
 
                               return Container(
@@ -1981,7 +2064,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                     vertical: 5.0, horizontal: 25.0),
                                 child: Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -1992,17 +2075,17 @@ class _LeaderBoardState extends State<LeaderBoard>
                                               color: appColors.mainAppColor,
                                               gradient: isFirstItem
                                                   ? LinearGradient(
-                                                      colors: [
-                                                        Colors.yellow,
-                                                        Colors.orangeAccent,
-                                                        Colors.yellow,
-                                                        Colors.orange,
-                                                        Colors.orange
-                                                      ], // Define your gradient colors
-                                                      begin: Alignment.topLeft,
-                                                      end: Alignment
-                                                          .bottomCenter,
-                                                    )
+                                                colors: [
+                                                  Colors.yellow,
+                                                  Colors.orangeAccent,
+                                                  Colors.yellow,
+                                                  Colors.orange,
+                                                  Colors.orange
+                                                ], // Define your gradient colors
+                                                begin: Alignment.topLeft,
+                                                end: Alignment
+                                                    .bottomCenter,
+                                              )
                                                   : null, // No gradient for other items
                                             ),
                                             height: 20,
@@ -2011,7 +2094,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                               child: Text(
                                                 '${index + 1}',
                                                 style: TextStyle(
-                                                  fontSize: 15,
+                                                  fontSize: 14,
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -2020,30 +2103,39 @@ class _LeaderBoardState extends State<LeaderBoard>
                                           ),
                                         ),
                                         SizedBox(
-                                          width: 20,
+                                          width: 5,
                                         ),
-                                        Text(
-                                          '${item['name']}',
+                                        Container(width: MediaQuery.of(context).size.width/3,child: Text(
+                                          item.cspname,
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: 15,
                                             color: Colors.white,
                                             fontWeight: isFirstItem
                                                 ? FontWeight.bold
                                                 : FontWeight.normal,
                                           ),
-                                        ),
+                                        ),),
+
                                       ],
                                     ),
-                                    Text(
-                                      '${item['earnings']}',
+                                    GestureDetector(child: Text(
+                                      item.totalCommission.toString(),
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 15,
                                         color: Colors.white,
                                         fontWeight: isFirstItem
                                             ? FontWeight.bold
                                             : FontWeight.normal,
                                       ),
-                                    ),
+                                    ),onTap: (){
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => LeaderBoardItemDetails(item.koid),
+                                      )
+                                      );
+                                    },)
+                                    ,
                                   ],
                                 ),
                               );
@@ -2066,7 +2158,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                     ),
                   ),
                 ],
-              ),
+              ):CircularProgressIndicator(color: appColors.white,),
             ],
           ),
         ],
@@ -2093,7 +2185,11 @@ class HomePageview extends StatefulWidget {
 class _HomePageviewState extends State<HomePageview> {
   late ScrollController _scrollController;
   late double _opacity = 1.0;
+  int isLoading=0;
+  late CommisionDetailsResponse commisionDetailsResponse;
 
+  //CommisionDetailsResponse commisionDetailsResponse=CommisionDetailsResponse(statusCode: 0, message: "",data:);
+  AppColors appColors=AppColors();
   int targettedAmount=0;
 
   final currencyFormatter = NumberFormat('#,##0', 'en_US');
@@ -2102,6 +2198,7 @@ class _HomePageviewState extends State<HomePageview> {
   @override
   void initState() {
     super.initState();
+    getCommisionDetail();
     getTargetAmount();
     getBannerUrl();
     _scrollController = ScrollController()..addListener(_updateOpacity);
@@ -2140,7 +2237,7 @@ class _HomePageviewState extends State<HomePageview> {
       }
     });
   }
-  AppColors appColors = new AppColors();
+
 
   @override
   Widget build(BuildContext context) {
@@ -2313,7 +2410,7 @@ class _HomePageviewState extends State<HomePageview> {
                                       padding: const EdgeInsets.all(15.0),
                                       child: Center(
                                           child: Text(
-                                            '10 people\nwill earn\nmore\ncommission',
+                                            isLoading==1?'${commisionDetailsResponse.data.comparisonResult} people\nwill earn\nmore\ncommission':"Please wait..\nyour data\nis fetching",
                                             style: TextStyle(
                                               fontSize: 17,
                                             ),
@@ -2492,6 +2589,52 @@ class _HomePageviewState extends State<HomePageview> {
     });
   }
 
+
+  String getFirstDateOfMonth() {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    return '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
+  }
+
+  String getCurrentDate() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<Null> getCommisionDetail() {
+    String  fromDate = getFirstDateOfMonth();
+    String  toDate = getCurrentDate();
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getCommsionDetails(fromDate,toDate,"1A990128","1","true")
+        .then((value) {
+
+      if (value.statusCode==200) {
+        setState(() {
+
+          commisionDetailsResponse=value;
+          isLoading=1;
+
+        });
+
+      }else{
+        setState(() {
+
+        });
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
 
 }
 

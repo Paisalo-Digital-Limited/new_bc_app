@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
+import 'package:http/http.dart'as http;
+import 'package:new_bc_app/model/commonresponsemodelInt.dart';
 import 'package:new_bc_app/network/api_service.dart';
 import 'package:new_bc_app/views/transactionhistorypage.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -8,11 +13,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:package_info/package_info.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'Utils/localnotificationservice.dart';
+import 'model/appVersionModel.dart';
 import 'views/login.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -162,6 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     checkForUpdate();
+    //checkForLocalServerUpdate();
     Timer(
       Duration(seconds: 5),
           () => Navigator.pushReplacement(
@@ -220,7 +231,153 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> checkForLocalServerUpdate() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  String appVersion = packageInfo.version;
+  String buildNumber = packageInfo.buildNumber;
+  print("App version ${appVersion}, Build Number ${buildNumber}");
+
+    String baseUrl = 'https://erpservice.paisalo.in:980/PDL.Mobile.API/api';
+    String endpoint = '/LiveTrack/GetAppLink';
+    String queryParams = '?version=${appVersion}&AppName=B&action=1';
+    String fullUrl = baseUrl + endpoint + queryParams;
+    try {
+      http.Response response = await http.get(Uri.parse(fullUrl));
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseData = json.decode(response.body);
+        AppVersionModel appVersionModel = AppVersionModel.fromJson(responseData);
+        if (appVersionModel.data is int) {
+          int intValue = appVersionModel.data;
+          print("Response for App Version ${intValue}");
+          Timer(
+            Duration(seconds: 5),
+                () => Navigator.pushReplacement(
+              context as BuildContext,
+              MaterialPageRoute(
+                builder: (context) => (Login()),
+              ),
+            ),
+          );
+
+        } else if (appVersionModel.data is String) {
+
+          String stringValue = appVersionModel.data;
+          print("Response for App Version ${stringValue}");
+
+          _showUpdateDialog(context,stringValue.trim());
+        } else {
+          // Handle other types if necessary
+        }
+      } else {
+        // Handle error
+        print('Request failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle exception
+      print('Exception occurred: $e');
+    }
+  }
+  void _showUpdateDialog(BuildContext context,String url) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('Update Available'),
+          content: Text('A new version of the app is available. Please update to the latest version.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Update Now'),
+              onPressed: () {
+                // Navigator.pushReplacement(
+                //   context as BuildContext,
+                //   MaterialPageRoute(
+                //     builder: (context) => (MyWebView(url: url,)),
+                //   ),
+                // );
+                _launchURLBrowser('https://www.geeksforgeeks.org/');
+              },
+            ),
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _launchURLBrowser(String urls) async {
+    var url = Uri.parse(urls);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+
+  void _downloadFile(String url) async {
+    try {
+      // Send a GET request to the URL
+      http.Response response = await http.get(Uri.parse(url));
+
+      // Get the app's documents directory
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+
+      // Create a new file in the documents directory with the same name as the downloaded file
+      File file = File('${appDocDir.path}/downloaded_file.apk');
+
+      // Write the downloaded bytes to the file
+      await file.writeAsBytes(response.bodyBytes);
+
+      // Show a message indicating that the file has been downloaded
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('File Downloaded'),
+            content: Text('The file has been downloaded successfully.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      // Handle any errors that occur during the file download process
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('An error occurred while downloading the file: $e'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
 }
+
+
 
 
 

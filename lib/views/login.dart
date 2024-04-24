@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:new_bc_app/const/AppColors.dart';
 import 'package:new_bc_app/model/commonresponsemodel.dart';
+import 'package:new_bc_app/model/commonresponsemodelInt.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/views/homepage.dart';
 import 'package:new_bc_app/views/operationselect.dart';
@@ -413,7 +414,7 @@ class _LoginState extends State<Login> {
           prefs.getString("GSMID")!).then((value) async {
         if (value != null) {
 
-          CommonResponseModel loginResponse=value;
+          CommonResponseModelInt loginResponse=value;
           //saveLoginDate(loginResponse);
 
 

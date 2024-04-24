@@ -3,6 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:new_bc_app/const/AppColors.dart';
+import 'package:provider/provider.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../network/api_service.dart';
 
 
 class LeaderBoard extends StatefulWidget {
@@ -14,7 +21,6 @@ class LeaderBoard extends StatefulWidget {
 
 class _LeaderBoardState extends State<LeaderBoard> {
   int _current = 0;
-
   final CarouselController _controller = CarouselController();
   final List<String> imgList = [
     "assets/images/leaderboardbanner.gif",
@@ -32,6 +38,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
       ),
     );
   }
+  @override
+  void initState() {
+
+    super.initState();
+  }
+  AppColors appColors=AppColors();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,4 +188,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
       ),
     );
   }
+
+
+
 }

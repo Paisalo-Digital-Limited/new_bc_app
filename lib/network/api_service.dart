@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:new_bc_app/model/commissionDetailsResponse.dart';
+import 'package:new_bc_app/model/getTaskSlabDetailsResponse.dart';
+import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:retrofit/http.dart';
 
@@ -54,7 +57,7 @@ abstract class ApiService{
 
 
   @POST("BCTransaction/UpdateGSMId")
-  Future<CommonResponseModel> updateGsmid(@Header("Authorization") String bearerToken,
+  Future<CommonResponseModelInt> updateGsmid(@Header("Authorization") String bearerToken,
       @Field("KO_Id") String cspCode,@Field("GSMId") String gsmid);
 
   @POST("BCWithdrawl/InsertWithdrawlRequests")
@@ -89,7 +92,22 @@ abstract class ApiService{
 
 
 
+  @GET("BCTransaction/GetTopCommissions")
+  Future<LeaderBoardDataResponse> getLeaderBoardData();
+
+
+  @GET("BCTransaction/GetCommissionCount")
+  Future<CommisionDetailsResponse> getCommsionDetails(@Query("fromDate") String fromdate,@Query("todate") String todate,@Query("koId") String koId,@Query("areaType") String areaType,@Query("isLive") String isLive);
+
+
+
+  @GET("BCTransaction/GetTaskSlabDetails")
+  Future<GetTaskSlabDetailsResponse> getTaskSlabDetails();
+
+
 }
+
+
 
 
 

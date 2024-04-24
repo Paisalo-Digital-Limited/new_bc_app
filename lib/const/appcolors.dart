@@ -50,6 +50,7 @@ final rednotcomplete= const Color(0xf8fce7e9);
 final listorange= const Color(0xf8fcf0e7);
 final darkgreen= const Color(0xf8113431);
 final mainAppColor=const Color(0xFFD42D3F);
+final mainAppColorDark=const Color(0xFFB9051A);
 final mainAppColorTrans=const Color(0xDDD42D3F);
 
 // ///////////////////////// Image View URL //////////////////// Apspnk -57407 ---http://103.158.182.123:90   allenp.superhouseerp.com -- testing.superhouseerp.com ---  //88215    /// http://13.232.241.145  ...///allenp.superhouseerp.com
