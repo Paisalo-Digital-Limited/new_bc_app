@@ -40,6 +40,14 @@ Future<void> main() async {
 
     }
   });
+  await Permission.location.isDenied.then((value) {
+    if(value){
+      Permission.location.request();
+    }else{
+
+
+    }
+  });
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
 

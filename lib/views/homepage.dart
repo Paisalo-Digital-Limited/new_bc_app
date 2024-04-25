@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
+import 'package:new_bc_app/utils/currentLocation.dart';
 import 'package:new_bc_app/views/LeaderBoardItemDetails.dart';
 import 'package:new_bc_app/views/achiverpage.dart';
 import 'package:new_bc_app/views/csp_annual_report.dart';
@@ -38,7 +40,8 @@ import 'transactionhistorypage.dart';
 class HomePage extends StatefulWidget {
   final LoginResponse loginResponse;
   final String username;
-  const HomePage({super.key, required this.loginResponse, required this.username});
+  const HomePage(
+      {super.key, required this.loginResponse, required this.username});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -57,10 +60,9 @@ class _HomePageState extends State<HomePage> {
     "assets/images/leaderboardbanner.gif"
   ];
 
-
   // CalendarPage(),
 
-  late List<dynamic> _pages ;
+  late List<dynamic> _pages;
   Widget buildDot({required int index}) {
     return Container(
       width: 7,
@@ -75,12 +77,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-   _pages = [
-    HomePageview(widget.loginResponse,widget.username),
-    LeaderBoard(widget.loginResponse,widget.username),
-    ServiceAndSchemeList(widget.loginResponse,widget.username),
-    EarningPage(widget.username),
-    ProfilePage( loginResponse: widget.loginResponse,username:widget.username),
+    _pages = [
+      HomePageview(widget.loginResponse, widget.username),
+      LeaderBoard(widget.loginResponse, widget.username),
+      ServiceAndSchemeList(widget.loginResponse, widget.username),
+      EarningPage(widget.username),
+      ProfilePage(
+          loginResponse: widget.loginResponse, username: widget.username),
     ];
     super.initState();
     //_showOverlay(context);
@@ -113,48 +116,56 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: CurvedNavigationBar(
         height: 60,
         items: <Widget>[
-
-          Padding(padding: EdgeInsets.all(8),
-          child:  ImageIcon(
-            AssetImage('assets/images/home_ic.png'), // Replace 'assets/image.png' with your image path
-            size: 20, // Adjust the size as needed
-            color: _page==0?appColors.mainAppColor: Colors.grey,
-            // Adjust the color as needed
-          ),)
-         ,
-          Padding(padding: EdgeInsets.all(8),
-            child:  ImageIcon(
-              AssetImage('assets/images/leader_ic.png'), // Replace 'assets/image.png' with your image path
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: ImageIcon(
+              AssetImage(
+                  'assets/images/home_ic.png'), // Replace 'assets/image.png' with your image path
               size: 20, // Adjust the size as needed
-              color: _page==1?appColors.mainAppColor: Colors.grey,
+              color: _page == 0 ? appColors.mainAppColor : Colors.grey,
               // Adjust the color as needed
-            ),)
-          ,
-          Padding(padding: EdgeInsets.all(8),
-            child:  ImageIcon(
-              AssetImage('assets/images/service_ic.png'), // Replace 'assets/image.png' with your image path
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: ImageIcon(
+              AssetImage(
+                  'assets/images/leader_ic.png'), // Replace 'assets/image.png' with your image path
               size: 20, // Adjust the size as needed
-              color: _page==2?appColors.mainAppColor: Colors.grey,
+              color: _page == 1 ? appColors.mainAppColor : Colors.grey,
               // Adjust the color as needed
-            ),)
-          ,
-          Padding(padding: EdgeInsets.all(8),
-            child:  ImageIcon(
-              AssetImage('assets/images/earn_ic.png'), // Replace 'assets/image.png' with your image path
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: ImageIcon(
+              AssetImage(
+                  'assets/images/service_ic.png'), // Replace 'assets/image.png' with your image path
               size: 20, // Adjust the size as needed
-              color: _page==3?appColors.mainAppColor: Colors.grey,
+              color: _page == 2 ? appColors.mainAppColor : Colors.grey,
               // Adjust the color as needed
-            ),)
-          ,
-          Padding(padding: EdgeInsets.all(8),
-            child:  ImageIcon(
-              AssetImage('assets/images/prof_ic.png'), // Replace 'assets/image.png' with your image path
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: ImageIcon(
+              AssetImage(
+                  'assets/images/earn_ic.png'), // Replace 'assets/image.png' with your image path
               size: 20, // Adjust the size as needed
-              color: _page==4?appColors.mainAppColor: Colors.grey,
+              color: _page == 3 ? appColors.mainAppColor : Colors.grey,
               // Adjust the color as needed
-            ),)
-          ,
-
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: ImageIcon(
+              AssetImage(
+                  'assets/images/prof_ic.png'), // Replace 'assets/image.png' with your image path
+              size: 20, // Adjust the size as needed
+              color: _page == 4 ? appColors.mainAppColor : Colors.grey,
+              // Adjust the color as needed
+            ),
+          ),
         ],
         color: Colors.white,
         buttonBackgroundColor: Colors.white,
@@ -204,6 +215,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  currentLocation _locationService = currentLocation();
+  String _currentAddress = '';
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+  int isLoading = 0;
   TextEditingController _nameController = TextEditingController();
   TextEditingController _mobileController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
@@ -222,6 +238,25 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     });
   }*/
+  Future<void> _getCurrentLocation() async {
+    try {
+      Map<String, dynamic> locationData =
+          await _locationService.getCurrentLocation();
+      setState(() {
+        _latitude = locationData['latitude'];
+        _longitude = locationData['longitude'];
+        _currentAddress = locationData['address'];
+      });
+    } catch (e) {
+      print("Error getting current location: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    _getCurrentLocation();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -248,14 +283,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: Colors.grey[300],
-                    backgroundImage:
-                    _image != null ? FileImage(_image!) : null,
+                    backgroundImage: _image != null ? FileImage(_image!) : null,
                     child: _image == null
                         ? Icon(
-                      Icons.add_a_photo,
-                      size: 50,
-                      color: Colors.grey[800],
-                    )
+                            Icons.add_a_photo,
+                            size: 50,
+                            color: Colors.grey[800],
+                          )
                         : null,
                   ),
                 ),
@@ -270,12 +304,96 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.white,
                       fontFamily: 'Visbybold'),
                 ),
+                Row(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width / 1.5,
+                      child: Card(
+                        shape: Border.all(
+                            width: 0,
+                            color: Colors
+                                .black), // Optional border for visual clarity
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            height: 45,
+                            color: Colors.white,
+                            padding: EdgeInsets.only(left: 10, right: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  widget.loginResponse.data.address,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: 'Visbyfregular'),
+                                ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      CupertinoIcons.location_solid,
+                                      color: Colors.green,
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    isLoading == 1
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          )
+                        : GestureDetector(
+                            child: Card(
+                              shape: Border.all(width: 0, color: Colors.black),
+                              child: Container(
+                                alignment: Alignment.center,
+                                height: 45,
+                                width: MediaQuery.of(context).size.width -
+                                    (MediaQuery.of(context).size.width / 1.5 +
+                                        40),
+                                color: Colors.white,
+                                child: Text("GEO TAG",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontFamily: 'Visbyfregular')),
+                              ),
+                            ),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return CustomInputDialog(
+                                    onSubmit: (String pin) {
+                                      String pinCode = pin;
+                                      double latitude =
+                                          _latitude; // Set latitude
+                                      double longitude =
+                                          _longitude; // Set longitude
+                                      String address =
+                                          _currentAddress; // Set address
+                                      _saveDataToApi(pinCode, latitude,
+                                          longitude, address);
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          )
+                  ],
+                ),
                 SizedBox(height: 12.0),
                 Card(
                   shape: Border.all(
                       width: 0,
                       color:
-                      Colors.black), // Optional border for visual clarity
+                          Colors.black), // Optional border for visual clarity
 
                   child: Container(
                     height: 45,
@@ -294,7 +412,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               widget.loginResponse.data.mobile,
                               style: TextStyle(
-                                  fontSize: 16,fontFamily: 'Visbyfregular'),
+                                  fontSize: 16, fontFamily: 'Visbyfregular'),
                             ),
                             Icon(
                               CupertinoIcons.check_mark_circled_solid,
@@ -311,7 +429,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   shape: Border.all(
                       width: 0,
                       color:
-                      Colors.black), // Optional border for visual clarity
+                          Colors.black), // Optional border for visual clarity
                   child: Container(
                     height: 45,
                     color: Colors.white,
@@ -341,42 +459,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   shape: Border.all(
                       width: 0,
                       color:
-                      Colors.black), // Optional border for visual clarity
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width-38,
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.loginResponse.data.address,
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.location_solid,
-                                color: Colors.green,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.0),
-                Card(
-                  shape: Border.all(
-                      width: 0,
-                      color:
-                      Colors.black), // Optional border for visual clarity
+                          Colors.black), // Optional border for visual clarity
                   child: Container(
                     height: 45,
                     color: Colors.white,
@@ -403,20 +486,21 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: 12.0),
                 GestureDetector(
-                  onTap: (){
-
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => (TransactionHistoryPage(loginResponse: widget.loginResponse,username:widget.username)),
+                        builder: (context) => (TransactionHistoryPage(
+                            loginResponse: widget.loginResponse,
+                            username: widget.username)),
                       ),
                     );
                   },
-                  child:   Card(
+                  child: Card(
                     shape: Border.all(
                         width: 0,
                         color:
-                        Colors.black), // Optional border for visual clarity
+                            Colors.black), // Optional border for visual clarity
                     child: Container(
                       height: 45,
                       color: Colors.white,
@@ -441,25 +525,24 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-
                 ),
-
                 SizedBox(height: 12.0),
                 GestureDetector(
-                  onTap: (){
-
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => (WithdrawalAndDepositHistory(loginResponse: widget.loginResponse,username:widget.username)),
+                        builder: (context) => (WithdrawalAndDepositHistory(
+                            loginResponse: widget.loginResponse,
+                            username: widget.username)),
                       ),
                     );
                   },
-                  child:   Card(
+                  child: Card(
                     shape: Border.all(
                         width: 0,
                         color:
-                        Colors.black), // Optional border for visual clarity
+                            Colors.black), // Optional border for visual clarity
                     child: Container(
                       height: 45,
                       color: Colors.white,
@@ -484,12 +567,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-
                 ),
                 SizedBox(height: 12.0),
                 GestureDetector(
-                  onTap: (){
-
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -497,11 +578,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     );
                   },
-                  child:   Card(
+                  child: Card(
                     shape: Border.all(
                         width: 0,
                         color:
-                        Colors.black), // Optional border for visual clarity
+                            Colors.black), // Optional border for visual clarity
                     child: Container(
                       height: 45,
                       color: Colors.white,
@@ -526,16 +607,194 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-
                 ),
                 SizedBox(
                   height: 20,
                 ),
-
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _saveDataToApi(
+      String pinCode, double latitude, double longitude, String address) async {
+    setState(() {
+      isLoading = 1;
+    });
+
+    try {
+      String apiUrl =
+          'https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/LiveTrack/SaveCSPCenters';
+      final response = await http.post(
+        Uri.parse(
+            '$apiUrl?Pincode=$pinCode&Latitude=$latitude&Longitude=$longitude&Address=$address&IsActive=true'),
+      );
+      if (response.statusCode == 200) {
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.success,
+            title: 'Geo Tagging Response',
+            text: 'Data saved successfully',
+            backgroundColor: Colors.white,
+            titleColor: appColors.green,
+            textColor: appColors.lightgreen,
+            confirmBtnColor: appColors.green);
+        print('Data saved successfully');
+      } else {
+        // Failure
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.error,
+            title: 'Oops...',
+            text: 'Failed to save data: ${response.body}',
+            backgroundColor: Colors.white,
+            titleColor: appColors.mainAppColor,
+            textColor: appColors.mainAppColor,
+            confirmBtnColor: appColors.mainAppColor);
+        print('Failed to save data: ${response.body}');
+        // Show error message
+      }
+    } catch (e) {
+      QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Something went wrong: Exception: $e',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor);
+      print('Exception: $e');
+      // Show error message
+    } finally {
+      setState(() {
+        isLoading = 0;
+      });
+    }
+  }
+}
+
+class CustomInputDialog extends StatefulWidget {
+  final Function(String) onSubmit;
+
+  const CustomInputDialog({Key? key, required this.onSubmit}) : super(key: key);
+
+  @override
+  _CustomInputDialogState createState() => _CustomInputDialogState();
+}
+
+class _CustomInputDialogState extends State<CustomInputDialog> {
+  late TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String _pinCodeError = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      key: _scaffoldKey,
+      backgroundColor:
+          Colors.transparent, // Set dialog background color to transparent
+      child: Stack(
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width / 1.3,
+            height: 300,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                    'assets/images/card_bg.png'), // Set your image path here
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Container(
+            height: 280,
+            width: MediaQuery.of(context).size.width / 1.3,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Enter Pin Code',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  height: 50,
+                ),
+                TextField(
+                  maxLength: 6,
+                  controller: _textController,
+                  style: TextStyle(
+                      fontSize: 20,
+                      letterSpacing: 28,
+                      fontWeight: FontWeight.bold),
+                  cursorColor: Colors.white,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    errorText: _pinCodeError,
+                    filled: true,
+                    fillColor:
+                        Colors.white, // Set text field background color to red
+                    hintText: 'Enter Pin Code',
+                    hintStyle: TextStyle(letterSpacing: 2),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors.grey), // Set border color to grey
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors
+                              .grey), // Set border color to grey when focused
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_textController.text.length != 6) {
+                        setState(() {
+                          _pinCodeError = "Please enter correct pincode";
+                        });
+                      } else {
+                        String pinCode = _textController.text;
+                        widget.onSubmit(pinCode);
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary:
+                          Colors.red, // Set background color of button to red
+                    ),
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -550,8 +809,8 @@ class EarningPage extends StatefulWidget {
 }
 
 class _EarningPageState extends State<EarningPage> {
-  String targettedAmount="";
-  int isLoading=0;
+  String targettedAmount = "";
+  int isLoading = 0;
   late CommisionDetailsResponse commisionDetailsResponse;
   @override
   void initState() {
@@ -559,6 +818,7 @@ class _EarningPageState extends State<EarningPage> {
     super.initState();
     getTargetAmount();
   }
+
   String getFirstDateOfMonth() {
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
@@ -571,26 +831,20 @@ class _EarningPageState extends State<EarningPage> {
   }
 
   Future<Null> getCommisionDetail() {
-    String  fromDate = getFirstDateOfMonth();
-    String  toDate = getCurrentDate();
+    String fromDate = getFirstDateOfMonth();
+    String toDate = getCurrentDate();
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCommsionDetails(fromDate,toDate,"1A990128","1","true")
+        .getCommsionDetails(fromDate, toDate, "1A990128", "1", "true")
         .then((value) {
-
-      if (value.statusCode==200) {
+      if (value.statusCode == 200) {
         setState(() {
-
-          commisionDetailsResponse=value;
-          isLoading=1;
-
+          commisionDetailsResponse = value;
+          isLoading = 1;
         });
-
-      }else{
-        setState(() {
-
-        });
+      } else {
+        setState(() {});
         QuickAlert.show(
           context: context,
           type: QuickAlertType.error,
@@ -616,539 +870,571 @@ class _EarningPageState extends State<EarningPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appColors.mainAppColor,
-      body: isLoading==0?Center(child:CircularProgressIndicator(color: Colors.white,) ,): SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 30,
+      body: isLoading == 0
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
               ),
-              Container(
-                width: double.maxFinite,
-                height: MediaQuery.of(context).size.height / 5,
-                margin: EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(
-                        'assets/images/list_card_bg.png'), // Replace with the actual image path
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                padding: EdgeInsets.all(10),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "CURRENT EARNINGS",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white,
-                          fontFamily: 'Visbyfregular',
+            )
+          : SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 30,
+                    ),
+                    Container(
+                      width: double.maxFinite,
+                      height: MediaQuery.of(context).size.height / 5,
+                      margin: EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(
+                              'assets/images/list_card_bg.png'), // Replace with the actual image path
+                          fit: BoxFit.fill,
                         ),
                       ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                         GestureDetector(onTap: (){
-                           Navigator.push(
-                               context,
-                               MaterialPageRoute(
-                                 builder: (context) => LeaderBoardItemDetails(widget.userName),
-                               )
-                           );
-                         },child:  Text(
-                           '₹ ${commisionDetailsResponse.data.myIncomeResult}',
-                           style: TextStyle(
-                               fontSize: 40,
-                               fontFamily: 'Visbybold',
-                               color: Colors.white),
-                         ),),
-                          SizedBox(
-                            width: 8,
-                          ),
-                          Container(
-                            width: 60,
-                            alignment: Alignment.center,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
+                      padding: EdgeInsets.all(10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "CURRENT EARNINGS",
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.white,
+                                fontFamily: 'Visbyfregular',
+                              ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(
-                                  CupertinoIcons.down_arrow,
-                                  size: 15,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              LeaderBoardItemDetails(
+                                                  widget.userName),
+                                        ));
+                                  },
+                                  child: Text(
+                                    '₹ ${commisionDetailsResponse.data.myIncomeResult}',
+                                    style: TextStyle(
+                                        fontSize: 40,
+                                        fontFamily: 'Visbybold',
+                                        color: Colors.white),
+                                  ),
                                 ),
-                                Text(
-                                  "0",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontFamily: 'Visbyfregular'),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Container(
+                                  width: 60,
+                                  alignment: Alignment.center,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        CupertinoIcons.down_arrow,
+                                        size: 15,
+                                      ),
+                                      Text(
+                                        "0",
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontFamily: 'Visbyfregular'),
+                                      )
+                                    ],
+                                  ),
                                 )
                               ],
                             ),
-                          )
-                        ],
-                      ),
-                      Text(
-                        "Best month ₹0",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontFamily: 'Visbyfregular',
+                            Text(
+                              "Best month ₹0",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontFamily: 'Visbyfregular',
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Text(
-                "INVESTMENT RECOVERED",
-                style: TextStyle(
-                    fontFamily: 'Visbyfregular',
-                    color: Colors.white,
-                    fontSize: 12),
-              ),
-              SizedBox(
-                height: 4,
-              ),
-              Container(
-                width: 250,
-                height: 10, // Adjust the height of the progress bar
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(
-                      5), // Adjust the border radius for curved edges
-                  color:
-                      Colors.grey[300], // Background color of the progress bar
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: LinearProgressIndicator(
-                    value: 0.1, // Set the progress value (0.0 to 1.0)
-                    backgroundColor: Colors
-                        .transparent, // Set the background color of the indicator
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFEE5565)), // Color of the progress indicator
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 3,
-              ),
-              Container(
-                width: 250,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('₹0',
-                        style: TextStyle(
-                            fontFamily: 'Visbyfregular',
-                            color: Colors.white,
-                            fontSize: 11)),
-                    Text('₹0',
-                        style: TextStyle(
-                            fontFamily: 'Visbyfregular',
-                            color: Colors.white,
-                            fontSize: 11))
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 8),
-                child: Container(
-                  alignment: Alignment.center,
-                  // Adjust the width as needed
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height / 2.2,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(
-                          'assets/images/card_bg.png'), // Replace with your SVG file path
-                      fit: BoxFit.fill,
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 20,
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      "INVESTMENT RECOVERED",
+                      style: TextStyle(
+                          fontFamily: 'Visbyfregular',
+                          color: Colors.white,
+                          fontSize: 12),
+                    ),
+                    SizedBox(
+                      height: 4,
+                    ),
+                    Container(
+                      width: 250,
+                      height: 10, // Adjust the height of the progress bar
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                            5), // Adjust the border radius for curved edges
+                        color: Colors
+                            .grey[300], // Background color of the progress bar
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: LinearProgressIndicator(
+                          value: 0.1, // Set the progress value (0.0 to 1.0)
+                          backgroundColor: Colors
+                              .transparent, // Set the background color of the indicator
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(
+                              0xFFEE5565)), // Color of the progress indicator
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 3,
+                    ),
+                    Container(
+                      width: 250,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          Text('₹0',
+                              style: TextStyle(
+                                  fontFamily: 'Visbyfregular',
+                                  color: Colors.white,
+                                  fontSize: 11)),
+                          Text('₹0',
+                              style: TextStyle(
+                                  fontFamily: 'Visbyfregular',
+                                  color: Colors.white,
+                                  fontSize: 11))
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 10, right: 10, top: 8),
+                      child: Container(
+                        alignment: Alignment.center,
+                        // Adjust the width as needed
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height / 2.2,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(
+                                'assets/images/card_bg.png'), // Replace with your SVG file path
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              // Toggle light when tapped.
+                                              _viewType = 0;
+                                            });
+                                          },
+                                          child: Container(
+                                            alignment: Alignment.bottomCenter,
+                                            width: 90,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  'WEEKLY',
+                                                  style:
+                                                      TextStyle(fontSize: 12),
+                                                ),
+                                                Divider(
+                                                  // You can adjust the height of the divider
+                                                  color: _viewType == 0
+                                                      ? appColors.mainAppColor
+                                                      : Colors.grey
+                                                          .shade400, // You can set the color of the divider // You can set the color of the divider
+                                                  thickness:
+                                                      3, // You can adjust the thickness of the divider
+                                                  // You can set an end indent for the divider (space from the right)
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 20,
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              // Toggle light when tapped.
+                                              _viewType = 1;
+                                            });
+                                          },
+                                          child: Container(
+                                            alignment: Alignment.bottomCenter,
+                                            width: 90,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Text('MONTHLY',
+                                                    style: TextStyle(
+                                                        fontSize: 12)),
+                                                Divider(
+                                                  // You can adjust the height of the divider
+                                                  color: _viewType == 1
+                                                      ? appColors.mainAppColor
+                                                      : Colors.grey
+                                                          .shade400, // You can set the color of the divider // You can set the color of the divider
+                                                  thickness:
+                                                      3, // You can adjust the thickness of the divider
+                                                  // You can set an end indent for the divider (space from the right)
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return Dialog(
+                                              clipBehavior: Clip.antiAlias,
+                                              backgroundColor: Colors
+                                                  .white, // Red color with transparency
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                              ),
+                                              child: Container(
+                                                  height: 400,
+                                                  color: Colors.white,
+                                                  // height: 400,
+                                                  child: TableCalendar(
+                                                    firstDay: DateTime.utc(
+                                                        2023, 1, 1),
+                                                    lastDay: DateTime.utc(
+                                                        2030, 12, 31),
+                                                    focusedDay: _focusedDay,
+                                                    calendarFormat:
+                                                        _calendarFormat,
+                                                    selectedDayPredicate:
+                                                        (day) {
+                                                      // Use `selectedDayPredicate` to mark the selected day.
+                                                      return isSameDay(
+                                                          _selectedDay, day);
+                                                    },
+                                                    onDaySelected: (selectedDay,
+                                                        focusedDay) {
+                                                      setState(() {
+                                                        _selectedDay =
+                                                            selectedDay;
+                                                        _focusedDay =
+                                                            focusedDay;
+                                                      });
+                                                    },
+                                                    onFormatChanged: (format) {
+                                                      setState(() {
+                                                        _calendarFormat =
+                                                            format;
+                                                      });
+                                                    },
+                                                    onPageChanged:
+                                                        (focusedDay) {
+                                                      _focusedDay = focusedDay;
+                                                    },
+                                                  )),
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Container(
+                                          alignment: Alignment.center,
+                                          child: Icon(Icons.arrow_drop_down)),
+                                    )
+                                  ],
+                                ),
+                                Divider(
+                                  height: 0,
+                                  color: Colors.grey
+                                      .shade400, // You can set the color of the divider
+                                  thickness:
+                                      1, // You can adjust the thickness of the divider
+                                  indent:
+                                      6, // You can set an indent for the divider (space from the left)
+                                  endIndent:
+                                      6, // You can set an end indent for the divider (space from the right)
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.arrow_back_ios_outlined,
+                                  color: Colors.grey,
+                                  size: 15,
+                                ),
+                                SizedBox(
+                                  width: 30,
+                                ),
+                                Text(
+                                  'CURRENT PERIOD',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                SizedBox(
+                                  width: 30,
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios_outlined,
+                                  color: Colors.grey,
+                                  size: 15,
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            _ViewList[_viewType],
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 10, right: 10, top: 8, bottom: 20),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              20.0), // Adjust the value to change the radius
+                        ),
+                        color: Colors.white,
+                        elevation: 3,
+                        clipBehavior: Clip.antiAlias,
+                        child: Container(
+                          color: Colors.white,
+                          // height: 130,
+                          width: double.maxFinite,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        // Toggle light when tapped.
-                                        _viewType = 0;
-                                      });
-                                    },
-                                    child: Container(
-                                      alignment: Alignment.bottomCenter,
-                                      width: 90,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                              Container(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 16.0,
+                                        right: 16,
+                                        top: 16,
+                                        bottom: 8),
+                                    child: Text(
+                                      "FUTURE EARNINGS",
+                                      style: TextStyle(
+                                          color: Color(
+                                            0xFFB42C3B,
+                                          ),
+                                          fontSize: 14),
+                                    ),
+                                  )),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 16.0),
+                                      child: Row(
                                         children: [
                                           Text(
-                                            'WEEKLY',
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                          Divider(
-                                            // You can adjust the height of the divider
-                                            color: _viewType == 0
-                                                ? appColors.mainAppColor
-                                                : Colors.grey
-                                                    .shade400, // You can set the color of the divider // You can set the color of the divider
-                                            thickness:
-                                                3, // You can adjust the thickness of the divider
-                                            // You can set an end indent for the divider (space from the right)
-                                          ),
+                                            "Over the past",
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey),
+                                          )
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 20,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        // Toggle light when tapped.
-                                        _viewType = 1;
-                                      });
-                                    },
-                                    child: Container(
-                                      alignment: Alignment.bottomCenter,
-                                      width: 90,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      child: Row(
                                         children: [
-                                          Text('MONTHLY',
-                                              style: TextStyle(fontSize: 12)),
-                                          Divider(
-                                            // You can adjust the height of the divider
-                                            color: _viewType == 1
-                                                ? appColors.mainAppColor
-                                                : Colors.grey
-                                                    .shade400, // You can set the color of the divider // You can set the color of the divider
-                                            thickness:
-                                                3, // You can adjust the thickness of the divider
-                                            // You can set an end indent for the divider (space from the right)
+                                          Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                  20.0), // Adjust the value to change the radius
+                                            ),
+                                            clipBehavior: Clip.antiAlias,
+                                            elevation: 0,
+                                            child: Container(
+                                                padding: EdgeInsets.only(
+                                                    left: 3, right: 3),
+                                                alignment: Alignment.center,
+                                                color: Color(0x33C84527),
+                                                height: 18,
+                                                child: Text(
+                                                  '1 month',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(
+                                                        0xFFB42C3B,
+                                                      )),
+                                                )),
+                                          ),
+                                          Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                  20.0), // Adjust the value to change the radius
+                                            ),
+                                            clipBehavior: Clip.antiAlias,
+                                            elevation: 0,
+                                            child: Container(
+                                                padding: EdgeInsets.only(
+                                                    left: 3, right: 3),
+                                                alignment: Alignment.center,
+                                                color: Color(0x33C84527),
+                                                height: 18,
+                                                child: Text(
+                                                  '3 months',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(
+                                                        0xFFB42C3B,
+                                                      )),
+                                                )),
+                                          ),
+                                          Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                  20.0), // Adjust the value to change the radius
+                                            ),
+                                            clipBehavior: Clip.antiAlias,
+                                            elevation: 0,
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              padding: EdgeInsets.only(
+                                                  left: 3, right: 3),
+                                              color: Color(0x33DCD6D6),
+                                              height: 18,
+                                              child: Text(
+                                                '6 months',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey),
+                                              ),
+                                            ),
+                                          ),
+                                          Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                  20.0), // Adjust the value to change the radius
+                                            ),
+                                            clipBehavior: Clip.antiAlias,
+                                            elevation: 0,
+                                            child: Container(
+                                              padding: EdgeInsets.only(
+                                                  left: 3, right: 3),
+                                              alignment: Alignment.center,
+                                              color: Color(0x33DCD6D6),
+                                              height: 18,
+                                              child: Text(
+                                                '1 year',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey),
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                ],
+                                    )
+                                  ],
+                                ),
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return Dialog(
-                                        clipBehavior: Clip.antiAlias,
-                                        backgroundColor: Colors
-                                            .white, // Red color with transparency
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                        ),
-                                        child: Container(
-                                          height: 400,
-                                            color: Colors.white,
-                                            // height: 400,
-                                            child: TableCalendar(
-                                              firstDay:
-                                                  DateTime.utc(2023, 1, 1),
-                                              lastDay:
-                                                  DateTime.utc(2030, 12, 31),
-                                              focusedDay: _focusedDay,
-                                              calendarFormat: _calendarFormat,
-                                              selectedDayPredicate: (day) {
-                                                // Use `selectedDayPredicate` to mark the selected day.
-                                                return isSameDay(
-                                                    _selectedDay, day);
-                                              },
-                                              onDaySelected:
-                                                  (selectedDay, focusedDay) {
-                                                setState(() {
-                                                  _selectedDay = selectedDay;
-                                                  _focusedDay = focusedDay;
-                                                });
-                                              },
-                                              onFormatChanged: (format) {
-                                                setState(() {
-                                                  _calendarFormat = format;
-                                                });
-                                              },
-                                              onPageChanged: (focusedDay) {
-                                                _focusedDay = focusedDay;
-                                              },
-                                            )),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Container(
-                                    alignment: Alignment.center,
-                                    child: Icon(Icons.arrow_drop_down)),
-                              )
-                            ],
-                          ),
-                          Divider(
-                            height: 0,
-                            color: Colors.grey
-                                .shade400, // You can set the color of the divider
-                            thickness:
-                                1, // You can adjust the thickness of the divider
-                            indent:
-                                6, // You can set an indent for the divider (space from the left)
-                            endIndent:
-                                6, // You can set an end indent for the divider (space from the right)
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.arrow_back_ios_outlined,
-                            color: Colors.grey,
-                            size: 15,
-                          ),
-                          SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'CURRENT PERIOD',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          SizedBox(
-                            width: 30,
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios_outlined,
-                            color: Colors.grey,
-                            size: 15,
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      _ViewList[_viewType],
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 8,bottom: 20),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                        20.0), // Adjust the value to change the radius
-                  ),
-                  color: Colors.white,
-                  elevation: 3,
-                  clipBehavior: Clip.antiAlias,
-                  child: Container(
-                    color: Colors.white,
-                    // height: 130,
-                    width: double.maxFinite,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Container(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 16.0, right: 16, top: 16, bottom: 8),
-                              child: Text(
-                                "FUTURE EARNINGS",
-                                style: TextStyle(
-                                    color: Color(
-                                      0xFFB42C3B,
-                                    ),
-                                    fontSize: 14),
-                              ),
-                            )),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
                               Padding(
-                                padding: const EdgeInsets.only(left: 16.0),
+                                padding: const EdgeInsets.only(
+                                    left: 16.0, right: 16),
+                                child: Divider(
+                                  height: 1,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 16.0, right: 10, top: 16, bottom: 8),
                                 child: Row(
                                   children: [
                                     Text(
-                                      "Over the past",
+                                      "Your earning would have become ₹0",
                                       style: TextStyle(
-                                          fontSize: 13, color: Colors.grey),
+                                          color: Colors.black54, fontSize: 12),
+                                    ),
+                                    Text(
+                                      " (0%)",
+                                      style: TextStyle(
+                                          color: Color(
+                                            0xFFB42C3B,
+                                          ),
+                                          fontSize: 12),
                                     )
                                   ],
                                 ),
                               ),
                               SizedBox(
-                                width: 10,
-                              ),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            20.0), // Adjust the value to change the radius
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      elevation: 0,
-                                      child: Container(
-                                          padding: EdgeInsets.only(
-                                              left: 3, right: 3),
-                                          alignment: Alignment.center,
-                                          color: Color(0x33C84527),
-                                          height: 18,
-                                          child: Text(
-                                            '1 month',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                color: Color(
-                                                  0xFFB42C3B,
-                                                )),
-                                          )),
-                                    ),
-                                    Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            20.0), // Adjust the value to change the radius
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      elevation: 0,
-                                      child: Container(
-                                          padding: EdgeInsets.only(
-                                              left: 3, right: 3),
-                                          alignment: Alignment.center,
-                                          color: Color(0x33C84527),
-                                          height: 18,
-                                          child: Text(
-                                            '3 months',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                color: Color(
-                                                  0xFFB42C3B,
-                                                )),
-                                          )),
-                                    ),
-                                    Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            20.0), // Adjust the value to change the radius
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      elevation: 0,
-                                      child: Container(
-                                        alignment: Alignment.center,
-                                        padding:
-                                            EdgeInsets.only(left: 3, right: 3),
-                                        color: Color(0x33DCD6D6),
-                                        height: 18,
-                                        child: Text(
-                                          '6 months',
-                                          style: TextStyle(
-                                              fontSize: 10, color: Colors.grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            20.0), // Adjust the value to change the radius
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      elevation: 0,
-                                      child: Container(
-                                        padding:
-                                            EdgeInsets.only(left: 3, right: 3),
-                                        alignment: Alignment.center,
-                                        color: Color(0x33DCD6D6),
-                                        height: 18,
-                                        child: Text(
-                                          '1 year',
-                                          style: TextStyle(
-                                              fontSize: 10, color: Colors.grey),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                height: 20,
                               )
                             ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 16.0, right: 16),
-                          child: Divider(
-                            height: 1,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 16.0, right: 10, top: 16, bottom: 8),
-                          child: Row(
-                            children: [
-                              Text(
-                                "Your earning would have become ₹0",
-                                style: TextStyle(
-                                    color: Colors.black54, fontSize: 12),
-                              ),
-                              Text(
-                                " (0%)",
-                                style: TextStyle(
-                                    color: Color(
-                                      0xFFB42C3B,
-                                    ),
-                                    fontSize: 12),
-                              )
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 20,)
-                      ],
-                    ),
-                  ),
+                      ),
+                    )
+                  ],
                 ),
-              )
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 
   Future<void> getTargetAmount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      targettedAmount=prefs.getString('monthlyTarget')!;
+      targettedAmount = prefs.getString('monthlyTarget')!;
     });
   }
 }
@@ -1856,7 +2142,8 @@ class _LeaderBoardState extends State<LeaderBoard>
   late GifController _controllerGif;
 
   final CarouselController _controller = CarouselController();
-   LeaderBoardDataResponse earningsData=LeaderBoardDataResponse(statusCode: 0, message: "", data: []);
+  LeaderBoardDataResponse earningsData =
+      LeaderBoardDataResponse(statusCode: 0, message: "", data: []);
   @override
   void initState() {
     super.initState();
@@ -1886,24 +2173,18 @@ class _LeaderBoardState extends State<LeaderBoard>
       ),
     );
   }
+
   Future<void> _getLeaderBoardData() async {
-
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     final api = Provider.of<ApiService>(context, listen: false);
-    return api
-        .getLeaderBoardData()
-        .then((value) {
-
-      if (value.data.length>1) {
+    return api.getLeaderBoardData().then((value) {
+      if (value.data.length > 1) {
         setState(() {
-          earningsData=value;
+          earningsData = value;
         });
-      }else{
-        setState(() {
-
-        });
+      } else {
+        setState(() {});
         QuickAlert.show(
           context: context,
           type: QuickAlertType.error,
@@ -1917,6 +2198,7 @@ class _LeaderBoardState extends State<LeaderBoard>
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2024,141 +2306,157 @@ class _LeaderBoardState extends State<LeaderBoard>
                   ],
                 ),
               ),
-              earningsData.statusCode!=0?  Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  Container(
-                      alignment: Alignment.center,
-                      height: MediaQuery.of(context).size.height / 1.7,
-                      child: null),
-                  Positioned(
-                    top: 30,
-                    child: Container(
-                      color: appColors.mainAppColor,
-                      alignment: Alignment.bottomCenter,
-                      width: MediaQuery.of(context).size.width / 1.1,
-                      height: MediaQuery.of(context).size.height / 1.9,
-                      child: Container(
-                        margin: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                                'assets/images/list_bg.png'), // Replace with the actual image path
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                        padding: EdgeInsets.only(
-                            top: 35, left: 10, right: 10, bottom: 10),
-                        //  margin: EdgeInsets.only(top: 30,left: 10,right: 10),
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeTop: true,
-                          child: ListView.builder(
-                            itemCount: 10,
-                            itemBuilder: (context, index) {
-                              final item = earningsData.data[index];
-                              final bool isFirstItem = index == 0;
+              earningsData.statusCode != 0
+                  ? Stack(
+                      alignment: Alignment.topCenter,
+                      children: [
+                        Container(
+                            alignment: Alignment.center,
+                            height: MediaQuery.of(context).size.height / 1.7,
+                            child: null),
+                        Positioned(
+                          top: 30,
+                          child: Container(
+                            color: appColors.mainAppColor,
+                            alignment: Alignment.bottomCenter,
+                            width: MediaQuery.of(context).size.width / 1.1,
+                            height: MediaQuery.of(context).size.height / 1.9,
+                            child: Container(
+                              margin: EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage(
+                                      'assets/images/list_bg.png'), // Replace with the actual image path
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              padding: EdgeInsets.only(
+                                  top: 35, left: 10, right: 10, bottom: 10),
+                              //  margin: EdgeInsets.only(top: 30,left: 10,right: 10),
+                              child: MediaQuery.removePadding(
+                                context: context,
+                                removeTop: true,
+                                child: ListView.builder(
+                                  itemCount: 10,
+                                  itemBuilder: (context, index) {
+                                    final item = earningsData.data[index];
+                                    final bool isFirstItem = index == 0;
 
-                              return Container(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 5.0, horizontal: 25.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Card(
-                                          clipBehavior: Clip.antiAlias,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: appColors.mainAppColor,
-                                              gradient: isFirstItem
-                                                  ? LinearGradient(
-                                                colors: [
-                                                  Colors.yellow,
-                                                  Colors.orangeAccent,
-                                                  Colors.yellow,
-                                                  Colors.orange,
-                                                  Colors.orange
-                                                ], // Define your gradient colors
-                                                begin: Alignment.topLeft,
-                                                end: Alignment
-                                                    .bottomCenter,
-                                              )
-                                                  : null, // No gradient for other items
-                                            ),
-                                            height: 20,
-                                            width: 20,
-                                            child: Center(
-                                              child: Text(
-                                                '${index + 1}',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
+                                    return Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 5.0, horizontal: 25.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Card(
+                                                clipBehavior: Clip.antiAlias,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        appColors.mainAppColor,
+                                                    gradient: isFirstItem
+                                                        ? LinearGradient(
+                                                            colors: [
+                                                              Colors.yellow,
+                                                              Colors
+                                                                  .orangeAccent,
+                                                              Colors.yellow,
+                                                              Colors.orange,
+                                                              Colors.orange
+                                                            ], // Define your gradient colors
+                                                            begin: Alignment
+                                                                .topLeft,
+                                                            end: Alignment
+                                                                .bottomCenter,
+                                                          )
+                                                        : null, // No gradient for other items
+                                                  ),
+                                                  height: 20,
+                                                  width: 20,
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${index + 1}',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
+                                              SizedBox(
+                                                width: 5,
+                                              ),
+                                              Container(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    3,
+                                                child: Text(
+                                                  item.cspname,
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    color: Colors.white,
+                                                    fontWeight: isFirstItem
+                                                        ? FontWeight.bold
+                                                        : FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          GestureDetector(
+                                            child: Text(
+                                              item.totalCommission.toString(),
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                color: Colors.white,
+                                                fontWeight: isFirstItem
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                              ),
                                             ),
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        LeaderBoardItemDetails(
+                                                            item.koid),
+                                                  ));
+                                            },
                                           ),
-                                        ),
-                                        SizedBox(
-                                          width: 5,
-                                        ),
-                                        Container(width: MediaQuery.of(context).size.width/3,child: Text(
-                                          item.cspname,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.white,
-                                            fontWeight: isFirstItem
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),),
-
-                                      ],
-                                    ),
-                                    GestureDetector(child: Text(
-                                      item.totalCommission.toString(),
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.white,
-                                        fontWeight: isFirstItem
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
+                                        ],
                                       ),
-                                    ),onTap: (){
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => LeaderBoardItemDetails(item.koid),
-                                      )
-                                      );
-                                    },)
-                                    ,
-                                  ],
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        Positioned(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white38,
+                              borderRadius: BorderRadius.circular(50.0),
+                            ),
+                            alignment: Alignment.center,
+                            width: 80,
+                            height: 80,
+                            child: Image.asset('assets/images/trophy_ic.png'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : CircularProgressIndicator(
+                      color: appColors.white,
                     ),
-                  ),
-                  Positioned(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white38,
-                        borderRadius: BorderRadius.circular(50.0),
-                      ),
-                      alignment: Alignment.center,
-                      width: 80,
-                      height: 80,
-                      child: Image.asset('assets/images/trophy_ic.png'),
-                    ),
-                  ),
-                ],
-              ):CircularProgressIndicator(color: appColors.white,),
             ],
           ),
         ],
@@ -2167,16 +2465,11 @@ class _LeaderBoardState extends State<LeaderBoard>
   }
 }
 
-
 class HomePageview extends StatefulWidget {
- final LoginResponse loginResponse;
- final String username;
+  final LoginResponse loginResponse;
+  final String username;
 
-  HomePageview( this.loginResponse, this.username);
-
-
-
-
+  HomePageview(this.loginResponse, this.username);
 
   @override
   State<HomePageview> createState() => _HomePageviewState();
@@ -2185,16 +2478,16 @@ class HomePageview extends StatefulWidget {
 class _HomePageviewState extends State<HomePageview> {
   late ScrollController _scrollController;
   late double _opacity = 1.0;
-  int isLoading=0;
+  int isLoading = 0;
   late CommisionDetailsResponse commisionDetailsResponse;
 
   //CommisionDetailsResponse commisionDetailsResponse=CommisionDetailsResponse(statusCode: 0, message: "",data:);
-  AppColors appColors=AppColors();
-  int targettedAmount=0;
+  AppColors appColors = AppColors();
+  int targettedAmount = 0;
 
   final currencyFormatter = NumberFormat('#,##0', 'en_US');
-    String bannerUrl="";
-    double expandedHeight=0;
+  String bannerUrl = "";
+  double expandedHeight = 0;
   @override
   void initState() {
     super.initState();
@@ -2210,27 +2503,27 @@ class _HomePageviewState extends State<HomePageview> {
     super.dispose();
   }
 
-  getBannerUrl(){
+  getBannerUrl() {
     final api = Provider.of<ApiService>(context, listen: false);
     return api.getBannerImageUrl("D").then((value) {
-      if(value.data.banner.isNotEmpty){
+      if (value.data.banner.isNotEmpty) {
         setState(() {
-          bannerUrl=value.data.banner;
-          if(bannerUrl.length>2){
-            expandedHeight=220;
-          }else{
-            expandedHeight=0;
+          bannerUrl = value.data.banner;
+          if (bannerUrl.length > 2) {
+            expandedHeight = 220;
+          } else {
+            expandedHeight = 0;
           }
-
         });
       }
     });
-
   }
+
   void _updateOpacity() {
     setState(() {
       // You can adjust these values based on your needs
-      if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
         _opacity = 1.0;
       } else {
         _opacity = 0.0;
@@ -2238,11 +2531,9 @@ class _HomePageviewState extends State<HomePageview> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    return  CustomScrollView(
+    return CustomScrollView(
       controller: _scrollController,
       slivers: [
         SliverAppBar(
@@ -2252,30 +2543,29 @@ class _HomePageviewState extends State<HomePageview> {
           expandedHeight: expandedHeight,
           floating: false,
           flexibleSpace: FlexibleSpaceBar(
-            background:
-                bannerUrl.length>0?
-            Image.network(
-              'https://erp.paisalo.in:981/LOSDOC/BannerPost/${bannerUrl}',
-              fit: BoxFit.fill,
-
-            ):Container(height: 0,),
+            background: bannerUrl.length > 0
+                ? Image.network(
+                    'https://erp.paisalo.in:981/LOSDOC/BannerPost/${bannerUrl}',
+                    fit: BoxFit.fill,
+                  )
+                : Container(
+                    height: 0,
+                  ),
             collapseMode: CollapseMode.none,
           ),
         ),
         // Add other slivers or widgets as needed
         SliverList(
-
           delegate: SliverChildBuilderDelegate(
             addRepaintBoundaries: true,
-                addAutomaticKeepAlives: true,
-                (BuildContext context, int index) {
-              return  Container(
+            addAutomaticKeepAlives: true,
+            (BuildContext context, int index) {
+              return Container(
                   padding: EdgeInsets.only(bottom: 20),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-
                       SizedBox(height: MediaQuery.of(context).size.height / 40),
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 10.0),
@@ -2292,10 +2582,13 @@ class _HomePageviewState extends State<HomePageview> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              SizedBox(height: MediaQuery.of(context).size.height / 25),
+                              SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height / 25),
                               // Replace 'assets/your_image.svg' with your SVG file path
                               Image(
-                                image: AssetImage('assets/images/paisa_logo.png'),
+                                image:
+                                    AssetImage('assets/images/paisa_logo.png'),
                                 height: MediaQuery.of(context).size.height / 35,
                                 width: 140,
                               ),
@@ -2316,12 +2609,11 @@ class _HomePageviewState extends State<HomePageview> {
                                 alignment: Alignment.center,
                                 // width: 100,
                                 child: Text(
-                                    '₹${currencyFormatter.format(targettedAmount)}'
-                                 ,
+                                  '₹${currencyFormatter.format(targettedAmount)}',
                                   style: TextStyle(
-                                      fontSize: 26,
-                                      color: Colors.black,
-                                      ),
+                                    fontSize: 26,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                               Column(
@@ -2343,7 +2635,8 @@ class _HomePageviewState extends State<HomePageview> {
                                     width: 240,
                                     child: Text(
                                       '30% COMPLETED',
-                                      style: TextStyle(fontSize: 12, color: Colors.black),
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
                                     ),
                                   ),
                                 ],
@@ -2353,18 +2646,23 @@ class _HomePageviewState extends State<HomePageview> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => TargetSetPage(loginResponse: widget.loginResponse, username:widget.username,)),
+                                        builder: (context) => TargetSetPage(
+                                              loginResponse:
+                                                  widget.loginResponse,
+                                              username: widget.username,
+                                            )),
                                   );
                                 },
                                 child: Container(
                                   alignment: Alignment.center,
                                   width: 120,
                                   height: 30,
-                                  decoration:
-                                  BoxDecoration(color: appColors.mainAppColor),
+                                  decoration: BoxDecoration(
+                                      color: appColors.mainAppColor),
                                   child: Text(
                                     'RESET TARGET',
-                                    style: TextStyle(fontSize: 15, color: Colors.white),
+                                    style: TextStyle(
+                                        fontSize: 15, color: Colors.white),
                                   ),
                                 ),
                               ),
@@ -2397,24 +2695,27 @@ class _HomePageviewState extends State<HomePageview> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                         child: Row(
-                          //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: Card(
                                   elevation: 6,
                                   clipBehavior: Clip.antiAlias,
                                   child: Container(
-                                    height: MediaQuery.of(context).size.height / 4.8,
+                                    height: MediaQuery.of(context).size.height /
+                                        4.8,
                                     color: Colors.white,
                                     child: Padding(
                                       padding: const EdgeInsets.all(15.0),
                                       child: Center(
                                           child: Text(
-                                            isLoading==1?'${commisionDetailsResponse.data.comparisonResult} people\nwill earn\nmore\ncommission':"Please wait..\nyour data\nis fetching",
-                                            style: TextStyle(
-                                              fontSize: 17,
-                                            ),
-                                          )),
+                                        isLoading == 1
+                                            ? '${commisionDetailsResponse.data.comparisonResult} people\nwill earn\nmore\ncommission'
+                                            : "Please wait..\nyour data\nis fetching",
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                        ),
+                                      )),
                                     ),
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -2432,7 +2733,7 @@ class _HomePageviewState extends State<HomePageview> {
                                   onTap: () {
                                     Timer(
                                       Duration(seconds: 5),
-                                          () => Navigator.pushReplacement(
+                                      () => Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => AchiverPage(),
@@ -2445,13 +2746,15 @@ class _HomePageviewState extends State<HomePageview> {
                                     showDialog(
                                       context: context,
                                       barrierDismissible:
-                                      false, // Dialog cannot be dismissed by tapping outside
+                                          false, // Dialog cannot be dismissed by tapping outside
                                       //barrierColor: Colors.white70.withOpacity(0.9),
                                       builder: (BuildContext context) {
                                         return Dialog(
-                                          backgroundColor: Colors.white.withOpacity(0.94),
+                                          backgroundColor:
+                                              Colors.white.withOpacity(0.94),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20.0),
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(20.0),
@@ -2459,20 +2762,25 @@ class _HomePageviewState extends State<HomePageview> {
                                               child: Flexible(
                                                 child: Column(
                                                   mainAxisAlignment:
-                                                  MainAxisAlignment.center,
+                                                      MainAxisAlignment.center,
                                                   crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                                  mainAxisSize: MainAxisSize.min,
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
                                                     Container(
-                                                      width: 60, // Adjust width as needed
+                                                      width:
+                                                          60, // Adjust width as needed
                                                       height:
-                                                      60, // Adjust height as needed
-                                                      child: CircularProgressIndicator(
+                                                          60, // Adjust height as needed
+                                                      child:
+                                                          CircularProgressIndicator(
                                                         strokeWidth: 5,
                                                         valueColor:
-                                                        AlwaysStoppedAnimation<Color>(
-                                                            appColors.mainAppColor),
+                                                            AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                                appColors
+                                                                    .mainAppColor),
                                                       ),
                                                     ), // Circular Progress Indicator
                                                     SizedBox(height: 40),
@@ -2481,7 +2789,8 @@ class _HomePageviewState extends State<HomePageview> {
                                                       style: TextStyle(
                                                         fontSize: 24,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ), // Text indicating the process
                                                   ],
                                                 ),
@@ -2495,29 +2804,39 @@ class _HomePageviewState extends State<HomePageview> {
                                   child: Card(
                                       color: Colors.white,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20.0),
+                                        borderRadius:
+                                            BorderRadius.circular(20.0),
                                       ),
                                       elevation: 10,
                                       shadowColor: Colors.black,
                                       clipBehavior: Clip.antiAlias,
                                       child: Container(
-                                        height: MediaQuery.of(context).size.height / 4.8,
+                                        height:
+                                            MediaQuery.of(context).size.height /
+                                                4.8,
                                         color: appColors.mainAppColor,
                                         child: Padding(
                                           padding: const EdgeInsets.only(
-                                              top: 10, bottom: 10, left: 15, right: 15),
+                                              top: 10,
+                                              bottom: 10,
+                                              left: 15,
+                                              right: 15),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Text(
                                                 "Earn maximum\ncommission",
                                                 style: TextStyle(
-                                                    fontSize: 17, color: Colors.white),
+                                                    fontSize: 17,
+                                                    color: Colors.white),
                                               ),
                                               SizedBox(
-                                                height:
-                                                MediaQuery.of(context).size.height /
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height /
                                                     120,
                                               ),
                                               Text(
@@ -2528,8 +2847,9 @@ class _HomePageviewState extends State<HomePageview> {
                                                     color: Colors.white),
                                               ),
                                               SizedBox(
-                                                height:
-                                                MediaQuery.of(context).size.height /
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height /
                                                     120,
                                               ),
                                               Icon(
@@ -2553,7 +2873,9 @@ class _HomePageviewState extends State<HomePageview> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => (RequestForFundTransfer(loginResponse: widget.loginResponse,userName:widget.username)),
+                              builder: (context) => (RequestForFundTransfer(
+                                  loginResponse: widget.loginResponse,
+                                  userName: widget.username)),
                             ),
                           );
                         },
@@ -2578,17 +2900,14 @@ class _HomePageviewState extends State<HomePageview> {
         ),
       ],
     );
-
-
   }
 
   Future<void> getTargetAmount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      targettedAmount=int.parse(prefs.getString('monthlyTarget')!);
+      targettedAmount = int.parse(prefs.getString('monthlyTarget')!);
     });
   }
-
 
   String getFirstDateOfMonth() {
     final now = DateTime.now();
@@ -2602,26 +2921,20 @@ class _HomePageviewState extends State<HomePageview> {
   }
 
   Future<Null> getCommisionDetail() {
-    String  fromDate = getFirstDateOfMonth();
-    String  toDate = getCurrentDate();
+    String fromDate = getFirstDateOfMonth();
+    String toDate = getCurrentDate();
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCommsionDetails(fromDate,toDate,"1A990128","1","true")
+        .getCommsionDetails(fromDate, toDate, "1A990128", "1", "true")
         .then((value) {
-
-      if (value.statusCode==200) {
+      if (value.statusCode == 200) {
         setState(() {
-
-          commisionDetailsResponse=value;
-          isLoading=1;
-
+          commisionDetailsResponse = value;
+          isLoading = 1;
         });
-
-      }else{
-        setState(() {
-
-        });
+      } else {
+        setState(() {});
         QuickAlert.show(
           context: context,
           type: QuickAlertType.error,
@@ -2635,9 +2948,7 @@ class _HomePageviewState extends State<HomePageview> {
       }
     });
   }
-
 }
-
 
 class TutorialOverlay extends ModalRoute<void> {
   @override
