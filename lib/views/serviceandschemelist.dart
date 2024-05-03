@@ -132,7 +132,7 @@ AppColors appColors=new AppColors();
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      serviceListModel.data[index].name,
+                      serviceListModel.data[index].type,
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge!
@@ -157,25 +157,78 @@ AppColors appColors=new AppColors();
                 ),
                 child:
                 Container(
-                  constraints: BoxConstraints(
-                    maxHeight: 80, // Example
-                  ),
-                  child: ListView.builder(
-                    itemCount: serviceListModel.data[index].data.length, // Example number of rows
-                    itemBuilder: (BuildContext context, int indexs) {
-                      return   Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'upto ₹${serviceListModel.data[index].data[indexs].rangeA} - ₹${serviceListModel.data[index].data[indexs].rangeB}',
-                            style: TextStyle(color: Colors.grey.shade500),
-                          ),
-                          Text('₹${serviceListModel.data[index].data[indexs].maxAmt}',
-                              style: TextStyle(color: Colors.grey.shade500))
-                        ],
-                      );
-                    },
-                  ),
+                 child: Column(
+                   children: [
+
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Range',
+                             style: TextStyle(color: Colors.grey.shade500)),
+                         Text(
+                           'upto ₹${serviceListModel.data[index].data[0].range.split("-")[0]} - ₹${serviceListModel.data[index].data[0].range.split("-")[1]}',
+                           style: TextStyle(color: Colors.grey.shade500),
+                         )
+                       ],
+                     ), SizedBox(height: 5,),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Rural',
+                             style: TextStyle(color: Colors.grey.shade500)),
+                         Text(
+                           'upto ₹${serviceListModel.data[index].data[0].rural}',
+                           style: TextStyle(color: Colors.grey.shade500),
+                         )
+
+                       ],
+                     ), SizedBox(height: 5,),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Urban',
+                             style: TextStyle(color: Colors.grey.shade500)),
+                         Text(
+                           'upto ₹${serviceListModel.data[index].data[0].urban}',
+                           style: TextStyle(color: Colors.grey.shade500),
+                         ),
+
+
+                       ],
+                     ), SizedBox(height: 5,),  Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Urban CSP',
+                             style: TextStyle(color: Colors.grey.shade500)),
+                         Text(
+                           'upto ${serviceListModel.data[index].data[0].cspUrbanPercentage}%',
+                           style: TextStyle(color: Colors.grey.shade500),
+                         ),
+
+
+
+                       ],
+                     ),
+                     SizedBox(height: 5,),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+
+                         Text('Rural CSP',
+                             style: TextStyle(color: Colors.grey.shade500)),
+                         Text(
+                           'upto ${serviceListModel.data[index].data[0].cspRuralPercentage}%',
+                           style: TextStyle(color: Colors.grey.shade500),
+                         ),
+
+
+
+
+                       ],
+                     ),
+                   ],
+                 ),
+
                 ),
               ),
               onExpansionChanged: _expansionChangedCallback,

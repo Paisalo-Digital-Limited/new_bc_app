@@ -82,7 +82,7 @@ abstract class ApiService{
   Future<BannerDataModel> getBannerImageUrl(@Query("AppType") String AppType);
 
 
-  @GET("BCTransaction/GetCommissionDatabytype")
+  @GET("BCTransaction/GetCSPAppCommission")
   Future<ServiceListModel> getServiceList();
 
 
@@ -104,6 +104,13 @@ abstract class ApiService{
   @GET("BCTransaction/GetTaskSlabDetails")
   Future<GetTaskSlabDetailsResponse> getTaskSlabDetails();
 
+  @POST("BCTransaction/InsertCspKycDocument")
+  @MultiPart()
+  Future<CommonResponseModel> insertCspKycDocument(
+      @Part(name:'CspId') String cspId,
+      @Part(name:'DocType') String docType,
+      @Part(name:'IsDelete') bool isDelete,
+      @Part(name: "file") File file);
 
 }
 

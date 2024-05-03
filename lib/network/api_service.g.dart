@@ -404,7 +404,7 @@ class _ApiService implements ApiService {
     )
             .compose(
               _dio.options,
-              'BCTransaction/GetCommissionDatabytype',
+              'BCTransaction/GetCSPAppCommission',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -534,6 +534,58 @@ class _ApiService implements ApiService {
               baseUrl,
             ))));
     final value = GetTaskSlabDetailsResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<CommonResponseModel> insertCspKycDocument(
+    String cspId,
+    String docType,
+    bool isDelete,
+    File file,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.fields.add(MapEntry(
+      'CspId',
+      cspId,
+    ));
+    _data.fields.add(MapEntry(
+      'DocType',
+      docType,
+    ));
+    _data.fields.add(MapEntry(
+      'IsDelete',
+      isDelete.toString(),
+    ));
+    _data.files.add(MapEntry(
+      'file',
+      MultipartFile.fromFileSync(
+        file.path,
+        filename: file.path.split(Platform.pathSeparator).last,
+      ),
+    ));
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CommonResponseModel>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+      contentType: 'multipart/form-data',
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/InsertCspKycDocument',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CommonResponseModel.fromJson(_result.data!);
     return value;
   }
 

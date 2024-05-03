@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/utils/currentLocation.dart';
+import 'package:new_bc_app/views/KYCUpdatePage.dart';
 import 'package:new_bc_app/views/LeaderBoardItemDetails.dart';
 import 'package:new_bc_app/views/achiverpage.dart';
 import 'package:new_bc_app/views/csp_annual_report.dart';
@@ -24,9 +26,6 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../model/commissionDetailsResponse.dart';
-import '../model/leaderBoardDataResponse.dart';
-import '../model/leaderBoardDataResponse.dart';
-import '../model/leaderBoardDataResponse.dart';
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
 import 'package:gif/gif.dart';
@@ -425,32 +424,40 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 SizedBox(height: 12.0),
-                Card(
-                  shape: Border.all(
-                      width: 0,
-                      color:
-                          Colors.black), // Optional border for visual clarity
-                  child: Container(
-                    height: 45,
-                    color: Colors.white,
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'KYC Update',
-                          style: TextStyle(
-                              fontSize: 16, fontFamily: 'Visbyfregular'),
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              CupertinoIcons.arrow_right,
-                              color: Colors.green,
-                            )
-                          ],
-                        )
-                      ],
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => (KYCUpdatePage(widget.loginResponse,widget.username,))));
+                  },
+                  child: Card(
+                    shape: Border.all(
+                        width: 0,
+                        color:
+                            Colors.black), // Optional border for visual clarity
+                    child: Container(
+                      height: 45,
+                      color: Colors.white,
+                      padding: EdgeInsets.only(left: 10, right: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'KYC Update',
+                            style: TextStyle(
+                                fontSize: 16, fontFamily: 'Visbyfregular'),
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                CupertinoIcons.arrow_right,
+                                color: Colors.green,
+                              )
+                            ],
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -743,18 +750,21 @@ class _CustomInputDialogState extends State<CustomInputDialog> {
                   maxLength: 6,
                   controller: _textController,
                   style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 17,
                       letterSpacing: 28,
                       fontWeight: FontWeight.bold),
                   cursorColor: Colors.white,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     errorText: _pinCodeError,
                     filled: true,
                     fillColor:
                         Colors.white, // Set text field background color to red
-                    hintText: 'Enter Pin Code',
-                    hintStyle: TextStyle(letterSpacing: 2),
+                    hintText: 'Enter Pin Code here',
+                    hintStyle: TextStyle(letterSpacing: 1),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: Colors.grey), // Set border color to grey
@@ -782,8 +792,7 @@ class _CustomInputDialogState extends State<CustomInputDialog> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      primary:
-                          Colors.red, // Set background color of button to red
+                      backgroundColor: Colors.red, // Set background color of button to red
                     ),
                     child: Text(
                       'Submit',

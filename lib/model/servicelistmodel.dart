@@ -33,69 +33,57 @@ class ServiceListModel {
 }
 
 class ServiceListModelDatum {
-  String name;
+  String type;
   List<DatumDatum> data;
 
   ServiceListModelDatum({
-    required this.name,
+    required this.type,
     required this.data,
   });
 
   factory ServiceListModelDatum.fromJson(Map<String, dynamic> json) => ServiceListModelDatum(
-    name: json["name"],
+    type: json["type"],
     data: List<DatumDatum>.from(json["data"].map((x) => DatumDatum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name,
+    "type": type,
     "data": List<dynamic>.from(data.map((x) => x.toJson())),
   };
 }
 
 class DatumDatum {
-  int id;
-  dynamic transactionId;
-  String transactionType;
-  String amtType;
-  String rangeA;
-  String rangeB;
-  String percentageMax;
-  String maxAmt;
-  String areaType;
+  String typeOfTransaction;
+  String range;
+  double rural;
+  double urban;
+  double cspRuralPercentage;
+  double cspUrbanPercentage;
 
   DatumDatum({
-    required this.id,
-    required this.transactionId,
-    required this.transactionType,
-    required this.amtType,
-    required this.rangeA,
-    required this.rangeB,
-    required this.percentageMax,
-    required this.maxAmt,
-    required this.areaType,
+    required this.typeOfTransaction,
+    required this.range,
+    required this.rural,
+    required this.urban,
+    required this.cspRuralPercentage,
+    required this.cspUrbanPercentage,
   });
 
   factory DatumDatum.fromJson(Map<String, dynamic> json) => DatumDatum(
-    id: json["id"],
-    transactionId: json["transactionId"],
-    transactionType: json["transactionType"],
-    amtType: json["amtType"],
-    rangeA: json["rangeA"],
-    rangeB: json["rangeB"],
-    percentageMax: json["percentageMax"],
-    maxAmt: json["maxAmt"],
-    areaType: json["areaType"],
+    typeOfTransaction: json["typeOfTransaction"],
+    range: json["range"],
+    rural: json["rural"].toDouble(),
+    urban: json["urban"].toDouble(),
+    cspRuralPercentage: json["cspRuralPercentage"].toDouble(),
+    cspUrbanPercentage: json["cspUrbanPercentage"].toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "transactionId": transactionId,
-    "transactionType": transactionType,
-    "amtType": amtType,
-    "rangeA": rangeA,
-    "rangeB": rangeB,
-    "percentageMax": percentageMax,
-    "maxAmt": maxAmt,
-    "areaType": areaType,
+    "typeOfTransaction": typeOfTransaction,
+    "range": range,
+    "rural": rural,
+    "urban": urban,
+    "cspRuralPercentage": cspRuralPercentage,
+    "cspUrbanPercentage": cspUrbanPercentage,
   };
 }
