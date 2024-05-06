@@ -589,6 +589,60 @@ class _ApiService implements ApiService {
     return value;
   }
 
+  @override
+  Future<CspWeeklyLazerResponse> getCSPWeeklyCommision(String kOId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'KOId': kOId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CspWeeklyLazerResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetWeeklyCommission',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CspWeeklyLazerResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<CspMonthlyLazerResponse> getCSPMonthlyCommision(String kOId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'cspcode': kOId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CspMonthlyLazerResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetCspMonthlyLazer',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CspMonthlyLazerResponse.fromJson(_result.data!);
+    return value;
+  }
+
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
     if (T != dynamic &&
         !(requestOptions.responseType == ResponseType.bytes ||

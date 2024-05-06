@@ -1,8 +1,14 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:ffi';
+import 'dart:ffi';
+import 'dart:ffi';
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:new_bc_app/model/CspMonthlyLazerResponse.dart';
+import 'package:new_bc_app/model/CspWeeklyLazerResponse.dart';
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/utils/currentLocation.dart';
@@ -224,6 +230,8 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController _addressController = TextEditingController();
   File? _image;
   AppColors appColors = new AppColors();
+
+
   /*final picker = ImagePicker();
 
   Future getImage() async {
@@ -821,13 +829,38 @@ class _EarningPageState extends State<EarningPage> {
   String targettedAmount = "";
   int isLoading = 0;
   late CommisionDetailsResponse commisionDetailsResponse;
+  late CspWeeklyLazerResponse cspWeeklyLazerResponse;
+  late CspMonthlyLazerResponse cspMonthlyLazerResponse;
+  late String bestMonth;
+  late int bestMonthEarning;
+  late List<dynamic> _ViewList ;
+  bool month1=true;
+  bool month3=false;
+  bool month6=false;
+  bool month12=false;
+
+
+
+  Color enabledFutureColor= Color(0x33C84527);
+  Color enabledFutureTextColor= Color(0xFFB42C3B);
+  Color disabledFutureColor= Color(0x33DCD6D6);
+  Color disabledFutureTextColor= Color(0xFF727272);
+
+  var futurEarnings=0;
+
+  int currentDate=DateTime.now().day;
+
   @override
   void initState() {
     getCommisionDetail();
+    getCSPWeeklyLedger();
+    getCSPMonthlyLedger();
+
     super.initState();
     getTargetAmount();
   }
 
+  int totalEarning=0;
   String getFirstDateOfMonth() {
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
@@ -873,7 +906,7 @@ class _EarningPageState extends State<EarningPage> {
   DateTime? _selectedDay;
   AppColors appColors = new AppColors();
   // Set your progress value here
-  List<dynamic> _ViewList = [WeeklyView(), MonthlyView()];
+
   int _viewType = 0;
   @override
   Widget build(BuildContext context) {
@@ -905,7 +938,7 @@ class _EarningPageState extends State<EarningPage> {
                       ),
                       padding: EdgeInsets.all(10),
                       child: Padding(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.only(left: 10,right: 10,top: 10),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -958,7 +991,7 @@ class _EarningPageState extends State<EarningPage> {
                                         size: 15,
                                       ),
                                       Text(
-                                        "0",
+                                        "${((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt()}%",
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontFamily: 'Visbyfregular'),
@@ -969,19 +1002,23 @@ class _EarningPageState extends State<EarningPage> {
                               ],
                             ),
                             Text(
-                              "Best month ₹0",
+                              "Best month Earnings ₹${bestMonthEarning} (${bestMonth})",
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
                                 fontFamily: 'Visbyfregular',
                               ),
                             ),
+                            Text("Note:- This data is tentative data.",style: TextStyle(color: appColors.white,fontSize: 12,),textAlign: TextAlign.left,),
+
+
                           ],
                         ),
                       ),
                     ),
                     SizedBox(
                       height: 10,
+
                     ),
                     Text(
                       "INVESTMENT RECOVERED",
@@ -1005,7 +1042,7 @@ class _EarningPageState extends State<EarningPage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(5),
                         child: LinearProgressIndicator(
-                          value: 0.1, // Set the progress value (0.0 to 1.0)
+                          value: (((commisionDetailsResponse.data.myIncomeResult.toInt()*100)/(int.parse(targettedAmount)))/100), // Set the progress value (0.0 to 1.0)
                           backgroundColor: Colors
                               .transparent, // Set the background color of the indicator
                           valueColor: AlwaysStoppedAnimation<Color>(Color(
@@ -1021,12 +1058,12 @@ class _EarningPageState extends State<EarningPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('₹0',
+                          Text('₹${commisionDetailsResponse.data.myIncomeResult.toInt()}',
                               style: TextStyle(
                                   fontFamily: 'Visbyfregular',
                                   color: Colors.white,
                                   fontSize: 11)),
-                          Text('₹0',
+                          Text('₹${targettedAmount}',
                               style: TextStyle(
                                   fontFamily: 'Visbyfregular',
                                   color: Colors.white,
@@ -1073,6 +1110,7 @@ class _EarningPageState extends State<EarningPage> {
                                           },
                                           child: Container(
                                             alignment: Alignment.bottomCenter,
+                                            height: 30,
                                             width: 90,
                                             child: Column(
                                               mainAxisAlignment:
@@ -1134,65 +1172,65 @@ class _EarningPageState extends State<EarningPage> {
                                         ),
                                       ],
                                     ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return Dialog(
-                                              clipBehavior: Clip.antiAlias,
-                                              backgroundColor: Colors
-                                                  .white, // Red color with transparency
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                              ),
-                                              child: Container(
-                                                  height: 400,
-                                                  color: Colors.white,
-                                                  // height: 400,
-                                                  child: TableCalendar(
-                                                    firstDay: DateTime.utc(
-                                                        2023, 1, 1),
-                                                    lastDay: DateTime.utc(
-                                                        2030, 12, 31),
-                                                    focusedDay: _focusedDay,
-                                                    calendarFormat:
-                                                        _calendarFormat,
-                                                    selectedDayPredicate:
-                                                        (day) {
-                                                      // Use `selectedDayPredicate` to mark the selected day.
-                                                      return isSameDay(
-                                                          _selectedDay, day);
-                                                    },
-                                                    onDaySelected: (selectedDay,
-                                                        focusedDay) {
-                                                      setState(() {
-                                                        _selectedDay =
-                                                            selectedDay;
-                                                        _focusedDay =
-                                                            focusedDay;
-                                                      });
-                                                    },
-                                                    onFormatChanged: (format) {
-                                                      setState(() {
-                                                        _calendarFormat =
-                                                            format;
-                                                      });
-                                                    },
-                                                    onPageChanged:
-                                                        (focusedDay) {
-                                                      _focusedDay = focusedDay;
-                                                    },
-                                                  )),
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: Container(
-                                          alignment: Alignment.center,
-                                          child: Icon(Icons.arrow_drop_down)),
-                                    )
+                                    // GestureDetector(
+                                    //   onTap: () {
+                                    //     showDialog(
+                                    //       context: context,
+                                    //       builder: (BuildContext context) {
+                                    //         return Dialog(
+                                    //           clipBehavior: Clip.antiAlias,
+                                    //           backgroundColor: Colors
+                                    //               .white, // Red color with transparency
+                                    //           shape: RoundedRectangleBorder(
+                                    //             borderRadius:
+                                    //                 BorderRadius.circular(10.0),
+                                    //           ),
+                                    //           child: Container(
+                                    //               height: 400,
+                                    //               color: Colors.white,
+                                    //               // height: 400,
+                                    //               child: TableCalendar(
+                                    //                 firstDay: DateTime.utc(
+                                    //                     2023, 1, 1),
+                                    //                 lastDay: DateTime.utc(
+                                    //                     2030, 12, 31),
+                                    //                 focusedDay: _focusedDay,
+                                    //                 calendarFormat:
+                                    //                     _calendarFormat,
+                                    //                 selectedDayPredicate:
+                                    //                     (day) {
+                                    //                   // Use `selectedDayPredicate` to mark the selected day.
+                                    //                   return isSameDay(
+                                    //                       _selectedDay, day);
+                                    //                 },
+                                    //                 onDaySelected: (selectedDay,
+                                    //                     focusedDay) {
+                                    //                   setState(() {
+                                    //                     _selectedDay =
+                                    //                         selectedDay;
+                                    //                     _focusedDay =
+                                    //                         focusedDay;
+                                    //                   });
+                                    //                 },
+                                    //                 onFormatChanged: (format) {
+                                    //                   setState(() {
+                                    //                     _calendarFormat =
+                                    //                         format;
+                                    //                   });
+                                    //                 },
+                                    //                 onPageChanged:
+                                    //                     (focusedDay) {
+                                    //                   _focusedDay = focusedDay;
+                                    //                 },
+                                    //               )),
+                                    //         );
+                                    //       },
+                                    //     );
+                                    //   },
+                                    //   child: Container(
+                                    //       alignment: Alignment.center,
+                                    //       child: Icon(Icons.arrow_drop_down)),
+                                    // )
                                   ],
                                 ),
                                 Divider(
@@ -1304,7 +1342,7 @@ class _EarningPageState extends State<EarningPage> {
                                     Expanded(
                                       child: Row(
                                         children: [
-                                          Card(
+                                          GestureDetector(child:  Card(
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
                                                   20.0), // Adjust the value to change the radius
@@ -1315,40 +1353,59 @@ class _EarningPageState extends State<EarningPage> {
                                                 padding: EdgeInsets.only(
                                                     left: 3, right: 3),
                                                 alignment: Alignment.center,
-                                                color: Color(0x33C84527),
+                                                color: month1? enabledFutureColor:disabledFutureColor,
                                                 height: 18,
                                                 child: Text(
                                                   '1 month',
                                                   style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: Color(
-                                                        0xFFB42C3B,
-                                                      )),
+                                                    fontSize: 10,
+                                                    color: month1? enabledFutureTextColor:disabledFutureTextColor,),
                                                 )),
                                           ),
-                                          Card(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                  20.0), // Adjust the value to change the radius
+                                          onTap: (){
+                                            setState(() {
+                                              futurEarnings=((commisionDetailsResponse.data.myIncomeResult/currentDate)*30).toInt();
+                                              month1=true;
+                                              month3=false;
+                                              month6=false;
+                                              month12=false;
+                                            });
+                                          },
+                                          )
+                                         ,
+                                          GestureDetector(
+                                            child: Card(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                    20.0), // Adjust the value to change the radius
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              elevation: 0,
+                                              child: Container(
+                                                  padding: EdgeInsets.only(
+                                                      left: 3, right: 3),
+                                                  alignment: Alignment.center,
+                                                  color: month3? enabledFutureColor:disabledFutureColor,
+                                                  height: 18,
+                                                  child: Text(
+                                                    '3 months',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: month3? enabledFutureTextColor:disabledFutureTextColor,),
+                                                  )),
                                             ),
-                                            clipBehavior: Clip.antiAlias,
-                                            elevation: 0,
-                                            child: Container(
-                                                padding: EdgeInsets.only(
-                                                    left: 3, right: 3),
-                                                alignment: Alignment.center,
-                                                color: Color(0x33C84527),
-                                                height: 18,
-                                                child: Text(
-                                                  '3 months',
-                                                  style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: Color(
-                                                        0xFFB42C3B,
-                                                      )),
-                                                )),
-                                          ),
-                                          Card(
+                                            onTap: (){
+                                              setState(() {
+                                                futurEarnings=((commisionDetailsResponse.data.myIncomeResult/currentDate)*90).toInt();
+                                                month1=false;
+                                                month3=true;
+                                                month6=false;
+                                                month12=false;
+                                              });
+                                            },
+                                          )
+                                          ,
+                                          GestureDetector(child: Card(
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
                                                   20.0), // Adjust the value to change the radius
@@ -1359,37 +1416,60 @@ class _EarningPageState extends State<EarningPage> {
                                               alignment: Alignment.center,
                                               padding: EdgeInsets.only(
                                                   left: 3, right: 3),
-                                              color: Color(0x33DCD6D6),
+                                              color: month6? enabledFutureColor:disabledFutureColor,
                                               height: 18,
                                               child: Text(
                                                 '6 months',
                                                 style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.grey),
+                                                  fontSize: 10,
+                                                  color: month6? enabledFutureTextColor:disabledFutureTextColor,),
                                               ),
                                             ),
                                           ),
-                                          Card(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                  20.0), // Adjust the value to change the radius
-                                            ),
-                                            clipBehavior: Clip.antiAlias,
-                                            elevation: 0,
-                                            child: Container(
-                                              padding: EdgeInsets.only(
-                                                  left: 3, right: 3),
-                                              alignment: Alignment.center,
-                                              color: Color(0x33DCD6D6),
-                                              height: 18,
-                                              child: Text(
-                                                '1 year',
-                                                style: TextStyle(
+                                          onTap: (){
+                                            setState(() {
+                                              futurEarnings=((commisionDetailsResponse.data.myIncomeResult/currentDate)*180).toInt();
+                                              month1=false;
+                                              month3=false;
+                                              month6=true;
+                                              month12=false;
+                                            });
+                                          },
+                                          )
+                                          ,
+                                          GestureDetector(
+                                            onTap: (){
+                                              setState(() {
+                                                futurEarnings=((commisionDetailsResponse.data.myIncomeResult/currentDate)*365).toInt();
+                                                month1=false;
+                                                month3=false;
+                                                month6=false;
+                                                month12=true;
+                                              });
+                                            },
+                                            child:  Card(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(
+                                                    20.0), // Adjust the value to change the radius
+                                              ),
+                                              clipBehavior: Clip.antiAlias,
+                                              elevation: 0,
+                                              child: Container(
+                                                padding: EdgeInsets.only(
+                                                    left: 3, right: 3),
+                                                alignment: Alignment.center,
+                                                color: month12? enabledFutureColor:disabledFutureColor,
+                                                height: 18,
+                                                child: Text(
+                                                  '1 year',
+                                                  style: TextStyle(
                                                     fontSize: 10,
-                                                    color: Colors.grey),
+                                                    color: month12? enabledFutureTextColor:disabledFutureTextColor,),
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                          )
+                                         ,
                                         ],
                                       ),
                                     )
@@ -1410,29 +1490,44 @@ class _EarningPageState extends State<EarningPage> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      "Your earning would have become ₹0",
+                                      "Your earning would have become ",
                                       style: TextStyle(
                                           color: Colors.black54, fontSize: 12),
                                     ),
-                                    Text(
-                                      " (0%)",
+                                   futurEarnings==0?Text(
+                                     "(₹${((commisionDetailsResponse.data.myIncomeResult/currentDate)*30).toInt()})",
+                                     style: TextStyle(
+                                         color: Color(
+                                           0xFFB42C3B,
+                                         ),
+                                         fontSize: 12),
+                                   ): Text(
+                                      "(₹${futurEarnings})",
                                       style: TextStyle(
                                           color: Color(
                                             0xFFB42C3B,
                                           ),
                                           fontSize: 12),
-                                    )
+                                    ),
+                                    Text(
+                                      "(Approx)",
+                                      style: TextStyle(
+                                          color: Colors.black54, fontSize: 10),
+                                    ),
                                   ],
                                 ),
                               ),
-                              SizedBox(
-                                height: 20,
-                              )
+                          SizedBox(
+                            height: 2,
+
+                          ),
+                             Text("**This data is tentative data.",style: TextStyle(color: appColors.mainAppColor,fontSize: 12,),textAlign: TextAlign.left,),
+
                             ],
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -1444,6 +1539,70 @@ class _EarningPageState extends State<EarningPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       targettedAmount = prefs.getString('monthlyTarget')!;
+    });
+  }
+
+  Future<Null> getCSPWeeklyLedger() {
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getCSPWeeklyCommision("1A990128")
+        .then((value) {
+      if (value.statusCode == 200) {
+        setState(() {
+          cspWeeklyLazerResponse = value;
+          _ViewList= [WeeklyView( cspWeeklyLazer: cspWeeklyLazerResponse), MonthlyView(cspMonthlyLazerResponse: cspMonthlyLazerResponse)];
+          //isLoading = 1;
+        });
+      } else {
+        setState(() {});
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
+
+
+  Future<Null> getCSPMonthlyLedger() {
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getCSPMonthlyCommision("1A990128")
+        .then((value) {
+      if (value.statusCode == 200) {
+        setState(() {
+          cspMonthlyLazerResponse = value;
+          bestMonth=cspMonthlyLazerResponse.data.reduce((prev, current) =>
+          prev.payableToCsp > current.payableToCsp ? prev : current).month;
+          bestMonthEarning=    cspMonthlyLazerResponse.data.reduce((prev, current) =>
+          prev.payableToCsp > current.payableToCsp ? prev : current).payableToCsp.toInt();
+          _ViewList= [WeeklyView( cspWeeklyLazer: cspWeeklyLazerResponse), MonthlyView(cspMonthlyLazerResponse:cspMonthlyLazerResponse)];
+          //isLoading = 1;
+
+
+
+        });
+      } else {
+        setState(() {});
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
     });
   }
 }
@@ -1488,16 +1647,32 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 }
+class MonthlyView extends StatefulWidget {
+  final CspMonthlyLazerResponse cspMonthlyLazerResponse;
+  MonthlyView({super.key, required this.cspMonthlyLazerResponse});
 
-class MonthlyView extends StatelessWidget {
+  @override
+  State<MonthlyView> createState() => _MonthlyViewState();
+}
+
+class _MonthlyViewState extends State<MonthlyView> {
+
+
   AppColors appColors = new AppColors();
+  List<Map<String, dynamic>> organizedData = List.generate(
+    4,
+        (index) => {"monthOfYear": "", "numTransactionsOrAvgBal": 0.0},
+  );
+int divis=1000;
+  @override
+  void initState() {
+    getLastFourMonths(widget.cspMonthlyLazerResponse);
+    getDivisionValue();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    double progressValue1 = 0.1; // Set your progress value here
-    double progressValue2 = 0.2; // Set your progress value here
-    double progressValue3 = 0.0; // Set your progress value here
-    double progressValue4 = 0.2;
     return Column(
       children: [
         Container(
@@ -1517,14 +1692,14 @@ class MonthlyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .2,
-                          heightFactor: progressValue1,
+                          heightFactor: organizedData[0]["numTransactionsOrAvgBal"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              progressValue1 * 240, // Calculate the position
+                          (organizedData[0]["numTransactionsOrAvgBal"]/divis) * 240, // Calculate the position
                           child: Container(
                             color: Color(0xFFF3F3F3),
                             //height: 40,
@@ -1536,11 +1711,94 @@ class MonthlyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    '0%',
-                                    style: TextStyle(fontSize: 15),
+                                    'र${organizedData[0]["numTransactionsOrAvgBal"]}',
+                                    style: TextStyle(fontSize: 10),
                                   ),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Container(
+                    width: 70,
+                    height: MediaQuery.of(context).size.height / 4,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        FractionallySizedBox(
+                          widthFactor: .2,
+                          heightFactor: organizedData[1]["numTransactionsOrAvgBal"]/divis,
+                          child: Container(
+                            color: appColors.mainAppColor,
+                          ),
+                        ),
+                        Positioned(
+                          bottom:
+                          (organizedData[1]["numTransactionsOrAvgBal"]/divis) * 240, // Calculate the position
+                          child: Container(
+                            color: Color(0xFFF3F3F3),
+                            height: 40,
+                            width: 50,
+                            alignment: Alignment.center,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[1]["numTransactionsOrAvgBal"]}',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Container(
+                    width: 70,
+                    height: MediaQuery.of(context).size.height / 4,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        FractionallySizedBox(
+                          widthFactor: .2,
+                          heightFactor: organizedData[2]["numTransactionsOrAvgBal"]/divis,
+                          child: Container(
+                            color: appColors.mainAppColor,
+                          ),
+                        ),
+                        Positioned(
+                          bottom:
+                          (organizedData[2]["numTransactionsOrAvgBal"]/divis) * 240, // Calculate the position
+                          child: Container(
+                            color: Color(0xFFF3F3F3),
+                            height: 40,
+                            width: 50,
+                            alignment: Alignment.center,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+
+                                  Text(
+                                    'र${organizedData[2]["numTransactionsOrAvgBal"]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                 ],
@@ -1563,14 +1821,14 @@ class MonthlyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .2,
-                          heightFactor: progressValue2,
+                          heightFactor: organizedData[3]["numTransactionsOrAvgBal"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              progressValue2 * 240, // Calculate the position
+                          (organizedData[3]["numTransactionsOrAvgBal"]/divis) * 240, // Calculate the position
                           child: Container(
                             color: Color(0xFFF3F3F3),
                             height: 40,
@@ -1582,103 +1840,7 @@ class MonthlyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    '-0%',
-                                    style: TextStyle(fontSize: 15),
-                                  ),
-                                  Text(
-                                    'र0',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  Container(
-                    width: 70,
-                    height: MediaQuery.of(context).size.height / 4,
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        FractionallySizedBox(
-                          widthFactor: .2,
-                          heightFactor: progressValue3,
-                          child: Container(
-                            color: appColors.mainAppColor,
-                          ),
-                        ),
-                        Positioned(
-                          bottom:
-                              progressValue3 * 240, // Calculate the position
-                          child: Container(
-                            color: Color(0xFFF3F3F3),
-                            height: 40,
-                            width: 50,
-                            alignment: Alignment.center,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '0%',
-                                    style: TextStyle(fontSize: 15),
-                                  ),
-                                  Text(
-                                    'र0',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  Container(
-                    width: 70,
-                    height: MediaQuery.of(context).size.height / 4,
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        FractionallySizedBox(
-                          widthFactor: .2,
-                          heightFactor: progressValue4,
-                          child: Container(
-                            color: appColors.mainAppColor,
-                          ),
-                        ),
-                        Positioned(
-                          bottom:
-                              progressValue4 * 240, // Calculate the position
-                          child: Container(
-                            color: Color(0xFFF3F3F3),
-                            height: 40,
-                            width: 50,
-                            alignment: Alignment.center,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '0%',
-                                    style: TextStyle(fontSize: 15),
-                                  ),
-                                  Text(
-                                    'र0',
+                                    'र${organizedData[3]["numTransactionsOrAvgBal"]}',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                 ],
@@ -1704,27 +1866,151 @@ class MonthlyView extends StatelessWidget {
                   alignment: Alignment.center,
                   height: 30,
                   width: 70,
-                  child: Text('JAN')),
+                  child: Text(organizedData[0]["monthOfYear"])),
               Container(
-                  alignment: Alignment.center, width: 70, child: Text('FEB')),
+                  alignment: Alignment.center, width: 70, child: Text(organizedData[1]["monthOfYear"])),
               Container(
-                  alignment: Alignment.center, width: 70, child: Text('MAR')),
+                  alignment: Alignment.center, width: 70, child: Text(organizedData[2]["monthOfYear"])),
               Container(
-                  alignment: Alignment.center, width: 70, child: Text('APR')),
+                  alignment: Alignment.center, width: 70, child: Text(organizedData[3]["monthOfYear"])),
             ],
           ),
         ),
       ],
     );
   }
+
+  void getLastFourMonths(CspMonthlyLazerResponse cspMonthlyLazerResponse) {
+
+    String currentMonth = DateFormat('MMMM').format(DateTime.now()); // Get the current month name
+
+    // Get the last three months
+    List<String> lastThreeMonths = [];
+
+    lastThreeMonths.add(currentMonth);
+    for (var i = 1; i <= 3; i++) {
+      var previousMonth = DateTime.now().subtract(Duration(days: 30 * i));
+      lastThreeMonths.add(DateFormat('MMMM').format(previousMonth)); // Get the month name using DateFormat
+    }
+print(lastThreeMonths);
+
+    for(var z=0;z<lastThreeMonths.length;z++){
+
+      for (var data in cspMonthlyLazerResponse.data) {
+        String month = data.month;
+        double payableToCSP = data.payableToCsp;
+        print("monthNAME ${lastThreeMonths[z]}    month${data.month}");
+        if(lastThreeMonths[z]==month){
+
+
+          // Update payableToCSP for the corresponding month in organizedData
+          organizedData[3-z]["monthOfYear"] = month;
+          organizedData[3-z]["numTransactionsOrAvgBal"] = payableToCSP;
+        }
+        // Find the index for the month in organizedData
+
+
+      }
+    }
+
+
+
+
+    print(organizedData);
+  }
+
+  void getDivisionValue() {
+    for (var data in organizedData) {
+      double payableToCSP = data["numTransactionsOrAvgBal"];
+      if (payableToCSP > 9999) {
+        divis = 100000;
+        break;
+      } else if (payableToCSP > 1000) {
+        divis = 10000;
+      } else if (payableToCSP > 100) {
+        divis = 1000;
+      }
+    }
+  }
+
 }
 
-class WeeklyView extends StatelessWidget {
-  AppColors appColors = new AppColors();
+
+
+
+
+class WeeklyView extends StatefulWidget {
+  final CspWeeklyLazerResponse cspWeeklyLazer;
+
+  const WeeklyView({super.key, required this.cspWeeklyLazer});
 
   @override
+  State<WeeklyView> createState() => _WeeklyViewState();
+}
+
+class _WeeklyViewState extends State<WeeklyView> {
+  AppColors appColors=AppColors();
+  List<Map<String, dynamic>> organizedData = List.generate(
+    7,
+        (index) => {"dayOfWeek": _getDayName(index), "payableToCSP": 0.0},
+  );
+  int divis=1000;
+
+
+@override
+  void initState() {
+  getOrganizeData();
+    super.initState();
+  }
+
+
+
+
+static String _getDayName(int index) {
+  int currentDayIndex = DateTime.now().weekday;
+  List<String> days = List.generate(7, (index) {
+    int dayIndex = (currentDayIndex + index) % 7;
+    return _getDayNameList(dayIndex);
+  });
+  return days[index].substring(0,3).toUpperCase();
+}
+
+static String _getDayNameList(int index) {
+  List<String> days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  return days[index];
+}
+
+int _getDayIndex(String day) {
+  int currentDayIndex = DateTime.now().weekday;
+  List<String> days = List.generate(7, (index) {
+    int dayIndex = (currentDayIndex + index) % 7;
+    print("dayName= ${day} index =${dayIndex}");
+    return _getDayNameList(dayIndex);
+  });
+  return days.indexOf(day);
+}
+
+void getOrganizeData(){
+  for (var data in widget.cspWeeklyLazer.data) {
+    var dayIndex = _getDayIndex(data.dayOfWeek);
+    organizedData[dayIndex]["payableToCSP"] += data.payableToCsp;
+  }
+
+  for (var data in organizedData) {
+    double payableToCSP = data["payableToCSP"];
+    if (payableToCSP > 9999) {
+      divis = 100000;
+      break;
+    } else if (payableToCSP > 1000) {
+      divis = 10000;
+    } else if (payableToCSP > 100) {
+      divis = 1000;
+    }
+  }
+  }
+  @override
   Widget build(BuildContext context) {
-    List<double> weeklyProgress = [0.2, 0.1, 0.0, 0.1, 0.3, 0.4, 0.23];
+
     return Column(
       children: [
         Container(
@@ -1743,14 +2029,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[0],
+                          heightFactor: organizedData[0]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[0] * 200, // Calculate the position
+                          (organizedData[0]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1761,9 +2047,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[0]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1785,14 +2071,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[1],
+                          heightFactor: organizedData[1]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[1] * 200, // Calculate the position
+                          (organizedData[1]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1803,9 +2089,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[1]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1827,14 +2113,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[2],
+                          heightFactor: organizedData[2]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[2] * 200, // Calculate the position
+                          (organizedData[2]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1845,9 +2131,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[2]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1869,14 +2155,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[3],
+                          heightFactor: organizedData[3]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[3] * 200, // Calculate the position
+                          (organizedData[3]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1887,9 +2173,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[3]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1911,14 +2197,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[4],
+                          heightFactor: organizedData[4]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[4] * 200, // Calculate the position
+                          (organizedData[4]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1929,9 +2215,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र 0',
+                                    'र${organizedData[4]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1953,14 +2239,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[5],
+                          heightFactor: organizedData[5]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[5] * 200, // Calculate the position
+                          (organizedData[5]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -1971,9 +2257,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[5]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1995,14 +2281,14 @@ class WeeklyView extends StatelessWidget {
                       children: [
                         FractionallySizedBox(
                           widthFactor: .8,
-                          heightFactor: weeklyProgress[6],
+                          heightFactor:organizedData[6]["payableToCSP"]/divis,
                           child: Container(
                             color: appColors.mainAppColor,
                           ),
                         ),
                         Positioned(
                           bottom:
-                              weeklyProgress[6] * 200, // Calculate the position
+                          (organizedData[6]["payableToCSP"]/divis) * 200, // Calculate the position
                           child: Container(
                             height: 20,
                             width: 50,
@@ -2013,9 +2299,9 @@ class WeeklyView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'र0',
+                                    'र${organizedData[6]["payableToCSP"]}',
                                     style: TextStyle(
-                                        fontSize: 13, color: Colors.grey),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -2043,9 +2329,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "1",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[0]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2056,9 +2342,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "2",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[1]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2069,9 +2355,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "3",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[2]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2082,9 +2368,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "4",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[3]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2095,9 +2381,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "5",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[4]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2108,9 +2394,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "6",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[5]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2121,9 +2407,9 @@ class WeeklyView extends StatelessWidget {
                     height: 20,
                     child: Center(
                         child: Text(
-                      "7",
-                      style: TextStyle(color: Colors.grey),
-                    )),
+                          organizedData[6]["dayOfWeek"],
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                        )),
                   ),
                 ],
               ),
@@ -2134,6 +2420,8 @@ class WeeklyView extends StatelessWidget {
     );
   }
 }
+
+
 
 class LeaderBoard extends StatefulWidget {
   final LoginResponse loginResponse;
@@ -2493,15 +2781,16 @@ class _HomePageviewState extends State<HomePageview> {
   //CommisionDetailsResponse commisionDetailsResponse=CommisionDetailsResponse(statusCode: 0, message: "",data:);
   AppColors appColors = AppColors();
   int targettedAmount = 0;
-
+  int completedAmountPer=0;
   final currencyFormatter = NumberFormat('#,##0', 'en_US');
   String bannerUrl = "";
   double expandedHeight = 0;
   @override
   void initState() {
     super.initState();
-    getCommisionDetail();
     getTargetAmount();
+    getCommisionDetail();
+
     getBannerUrl();
     _scrollController = ScrollController()..addListener(_updateOpacity);
   }
@@ -2527,6 +2816,13 @@ class _HomePageviewState extends State<HomePageview> {
       }
     });
   }
+
+
+
+
+
+
+
 
   void _updateOpacity() {
     setState(() {
@@ -2643,7 +2939,7 @@ class _HomePageviewState extends State<HomePageview> {
                                     alignment: Alignment.center,
                                     width: 240,
                                     child: Text(
-                                      '30% COMPLETED',
+                                      '${completedAmountPer}% COMPLETED',
                                       style: TextStyle(
                                           fontSize: 12, color: Colors.black),
                                     ),
@@ -2915,6 +3211,10 @@ class _HomePageviewState extends State<HomePageview> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       targettedAmount = int.parse(prefs.getString('monthlyTarget')!);
+      print("target $targettedAmount");
+      print(commisionDetailsResponse.data.myIncomeResult);
+
+
     });
   }
 
@@ -2940,6 +3240,7 @@ class _HomePageviewState extends State<HomePageview> {
       if (value.statusCode == 200) {
         setState(() {
           commisionDetailsResponse = value;
+          completedAmountPer=((commisionDetailsResponse.data.myIncomeResult.toInt()/targettedAmount)*100).toInt();
           isLoading = 1;
         });
       } else {

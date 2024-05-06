@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:new_bc_app/model/CspMonthlyLazerResponse.dart';
 import 'package:new_bc_app/model/commissionDetailsResponse.dart';
 import 'package:new_bc_app/model/getTaskSlabDetailsResponse.dart';
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:retrofit/http.dart';
+import 'package:retrofit/retrofit.dart';
 
+import '../model/CspWeeklyLazerResponse.dart';
 import '../model/annualcspreport.dart';
 import '../model/bannerurlmodel.dart';
 import '../model/commonresponsemodel.dart';
@@ -111,6 +114,14 @@ abstract class ApiService{
       @Part(name:'DocType') String docType,
       @Part(name:'IsDelete') bool isDelete,
       @Part(name: "file") File file);
+
+  @GET("BCTransaction/GetWeeklyCommission")
+  Future<CspWeeklyLazerResponse> getCSPWeeklyCommision(@Query("KOId") String kOId);
+
+
+
+  @GET("BCTransaction/GetCspMonthlyLazer")
+  Future<CspMonthlyLazerResponse> getCSPMonthlyCommision(@Query("cspcode") String kOId);
 
 }
 
