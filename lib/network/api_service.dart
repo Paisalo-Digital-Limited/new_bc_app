@@ -6,6 +6,7 @@ import 'package:new_bc_app/model/CspMonthlyLazerResponse.dart';
 import 'package:new_bc_app/model/commissionDetailsResponse.dart';
 import 'package:new_bc_app/model/getTaskSlabDetailsResponse.dart';
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
+import 'package:new_bc_app/model/monthlyTaskStatus.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:retrofit/http.dart';
 import 'package:retrofit/retrofit.dart';
@@ -122,6 +123,10 @@ abstract class ApiService{
 
   @GET("BCTransaction/GetCspMonthlyLazer")
   Future<CspMonthlyLazerResponse> getCSPMonthlyCommision(@Query("cspcode") String kOId);
+
+
+  @GET("BCTransaction/GetTargetStatus")
+  Future<MonthlyTaskStatus> getTargetStatus(@Query("koid") String kOId,@Query("Month") String month,@Query("Year") String year);
 
 }
 

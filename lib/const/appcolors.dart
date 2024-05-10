@@ -15,6 +15,7 @@ final redthemenew= const Color(0xffe7922a);
 final activecolornew= const Color(0xfff5ba73);
 final redthemelight= const Color(0xfffff8E1);
 final redtlight= const Color(0xfff8615f);
+final greenlight= const Color(0xff9cf85f);
 final greylist= const Color(0xff9a9999);
 final greylight= const Color(0xffdbdada);
 final greylight2= const Color(0xffe2e2e2);

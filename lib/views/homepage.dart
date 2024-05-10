@@ -6,6 +6,7 @@ import 'dart:ffi';
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:new_bc_app/model/CspMonthlyLazerResponse.dart';
 import 'package:new_bc_app/model/CspWeeklyLazerResponse.dart';
@@ -878,7 +879,7 @@ class _EarningPageState extends State<EarningPage> {
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCommsionDetails(fromDate, toDate, "1A990128", "1", "true")
+        .getCommsionDetails(fromDate, toDate, widget.userName, "1", "true")
         .then((value) {
       if (value.statusCode == 200) {
         setState(() {
@@ -906,6 +907,7 @@ class _EarningPageState extends State<EarningPage> {
   DateTime? _selectedDay;
   AppColors appColors = new AppColors();
   // Set your progress value here
+  int profitIncrease=1;
 
   int _viewType = 0;
   @override
@@ -986,12 +988,15 @@ class _EarningPageState extends State<EarningPage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
+                                  profitIncrease==1?Icon(
+                                    CupertinoIcons.up_arrow,
+                                    size: 15,
+                                  ):Icon(
                                         CupertinoIcons.down_arrow,
                                         size: 15,
                                       ),
                                       Text(
-                                        "${((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt()}%",
+                                        "${getProfitPercantage()}%",
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontFamily: 'Visbyfregular'),
@@ -1546,7 +1551,7 @@ class _EarningPageState extends State<EarningPage> {
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCSPWeeklyCommision("1A990128")
+        .getCSPWeeklyCommision(widget.userName)
         .then((value) {
       if (value.statusCode == 200) {
         setState(() {
@@ -1575,15 +1580,15 @@ class _EarningPageState extends State<EarningPage> {
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCSPMonthlyCommision("1A990128")
+        .getCSPMonthlyCommision(widget.userName)
         .then((value) {
       if (value.statusCode == 200) {
         setState(() {
           cspMonthlyLazerResponse = value;
-          bestMonth=cspMonthlyLazerResponse.data.reduce((prev, current) =>
-          prev.payableToCsp > current.payableToCsp ? prev : current).month;
-          bestMonthEarning=    cspMonthlyLazerResponse.data.reduce((prev, current) =>
-          prev.payableToCsp > current.payableToCsp ? prev : current).payableToCsp.toInt();
+          bestMonth=cspMonthlyLazerResponse.data.length>1?cspMonthlyLazerResponse.data.reduce((prev, current) =>
+          prev.payableToCsp > current.payableToCsp ? prev : current).month:"Data Not Found";
+          bestMonthEarning=  cspMonthlyLazerResponse.data.length>1?  cspMonthlyLazerResponse.data.reduce((prev, current) =>
+          prev.payableToCsp > current.payableToCsp ? prev : current).payableToCsp.toInt():0;
           _ViewList= [WeeklyView( cspWeeklyLazer: cspWeeklyLazerResponse), MonthlyView(cspMonthlyLazerResponse:cspMonthlyLazerResponse)];
           //isLoading = 1;
 
@@ -1604,6 +1609,23 @@ class _EarningPageState extends State<EarningPage> {
         );
       }
     });
+  }
+
+  getProfitPercantage() {
+  int percentage=  ((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt();
+   if(percentage<0){
+     setState(() {
+       profitIncrease=1;
+     });
+     return percentage-(2*percentage);
+
+   }else{
+     setState(() {
+       profitIncrease=0;
+
+     });
+     return percentage;
+   }
   }
 }
 
@@ -1702,7 +1724,7 @@ int divis=1000;
                           (organizedData[0]["numTransactionsOrAvgBal"]/divis) * 240, // Calculate the position
                           child: Container(
                             color: Color(0xFFF3F3F3),
-                            //height: 40,
+                            height: 40,
                             width: 50,
                             alignment: Alignment.center,
                             child: Center(
@@ -2787,9 +2809,11 @@ class _HomePageviewState extends State<HomePageview> {
   double expandedHeight = 0;
   @override
   void initState() {
-    super.initState();
     getTargetAmount();
     getCommisionDetail();
+    super.initState();
+
+
 
     getBannerUrl();
     _scrollController = ScrollController()..addListener(_updateOpacity);
@@ -2986,7 +3010,7 @@ class _HomePageviewState extends State<HomePageview> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => TaskList()),
+                            MaterialPageRoute(builder: (context) => TaskList(widget.username)),
                           );
                         },
                         child: Text(
@@ -3036,12 +3060,13 @@ class _HomePageviewState extends State<HomePageview> {
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
+                                    print('commsion ${commisionDetailsResponse.data.myIncomeResult}');
                                     Timer(
-                                      Duration(seconds: 5),
+                                      Duration(seconds: 2),
                                       () => Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => AchiverPage(),
+                                          builder: (context) => AchiverPage(widget.username,commisionDetailsResponse.data.myIncomeResult),
                                         ),
                                       ),
                                     );
@@ -3235,7 +3260,7 @@ class _HomePageviewState extends State<HomePageview> {
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCommsionDetails(fromDate, toDate, "1A990128", "1", "true")
+        .getCommsionDetails(fromDate, toDate, widget.username, "1", "true")
         .then((value) {
       if (value.statusCode == 200) {
         setState(() {
