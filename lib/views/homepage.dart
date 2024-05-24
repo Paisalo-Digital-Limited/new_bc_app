@@ -1,8 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
-import 'dart:ffi';
-import 'dart:ffi';
-import 'dart:ffi';
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -20,6 +16,7 @@ import 'package:new_bc_app/views/csp_annual_report.dart';
 import 'package:new_bc_app/views/requestforfundtransfer.dart';
 import 'package:new_bc_app/views/tasklist.dart';
 import 'package:new_bc_app/views/login.dart';
+import 'package:new_bc_app/views/transactionDetailsPageByCode.dart';
 import 'package:new_bc_app/views/withdrawalanddeposithistory.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
@@ -33,12 +30,14 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../model/commissionDetailsResponse.dart';
+import '../model/getTaskSlabDetailsResponse.dart';
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
 import 'package:gif/gif.dart';
 
 import 'earningpage.dart';
 import 'homevisitmappage.dart';
+import 'monthwiseLedgerReport.dart';
 import 'serviceandschemelist.dart';
 import 'targetsetpage.dart';
 import 'transactionhistorypage.dart';
@@ -273,209 +272,218 @@ class _ProfilePageState extends State<ProfilePage> {
     _addressController.dispose();
     super.dispose();
   }
+  void _showLogoutAlert(BuildContext context) {
+    QuickAlert.show(
+      context: context,
+      type: QuickAlertType.confirm,
+      title: 'Logout',
+      text: 'Are you sure you want to logout?',
+        backgroundColor: Colors.white,
+        headerBackgroundColor: appColors.mainAppColor,
+        titleColor: Colors.red,
+        textColor: Colors.red,
+      confirmBtnColor: appColors.mainAppColor,
+
+      confirmBtnText: 'Yes',
+      cancelBtnText: 'No',
+      onConfirmBtnTap: () {
+        Navigator.of(context).pop(); // Close the dialog
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>
+              Login()),
+        );
+      },
+      onCancelBtnTap: () {
+        Navigator.of(context).pop(); // Close the dialog
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appColors.mainAppColor,
+      appBar: AppBar(
+
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.logout,color: Colors.white,),
+            onPressed: () {
+              _showLogoutAlert(context);
+
+            },
+          ),
+        ],
+
+        backgroundColor: appColors.mainAppColor,
+      ),
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                GestureDetector(
-                  //onTap: getImage,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _image != null ? FileImage(_image!) : null,
-                    child: _image == null
-                        ? Icon(
-                            Icons.add_a_photo,
-                            size: 50,
-                            color: Colors.grey[800],
-                          )
-                        : null,
-                  ),
+          padding: EdgeInsets.only(left:16.0,right: 16.0,top: 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              GestureDetector(
+                //onTap: getImage,
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey[300],
+                  backgroundImage: _image != null ? FileImage(_image!) : null,
+                  child: _image == null
+                      ? Icon(
+                    Icons.add_a_photo,
+                    size: 50,
+                    color: Colors.grey[800],
+                  )
+                      : null,
                 ),
-                SizedBox(
-                  height: 12,
-                ),
-                Text(
-                  widget.loginResponse.data.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontFamily: 'Visbybold'),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width / 1.5,
-                      child: Card(
-                        shape: Border.all(
-                            width: 0,
-                            color: Colors
-                                .black), // Optional border for visual clarity
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Container(
-                            width: MediaQuery.of(context).size.width / 1.5,
-                            height: 45,
-                            color: Colors.white,
-                            padding: EdgeInsets.only(left: 10, right: 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  widget.loginResponse.data.address,
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: 'Visbyfregular'),
-                                ),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.location_solid,
-                                      color: Colors.green,
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
+              ),
+              SizedBox(
+                height: 12,
+              ),
+              Text(
+                widget.loginResponse.data.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontFamily: 'Visbybold'),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 1.5,
+                    child: Card(
+                      shape: Border.all(
+                          width: 0,
+                          color: Colors
+                              .black), // Optional border for visual clarity
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+
+
+                          height: 45,
+                          color: Colors.white,
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                widget.loginResponse.data.address,
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'Visbyfregular'),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.location_solid,
+                                    color: Colors.green,
+                                  )
+                                ],
+                              )
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    isLoading == 1
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          )
-                        : GestureDetector(
-                            child: Card(
-                              shape: Border.all(width: 0, color: Colors.black),
-                              child: Container(
-                                alignment: Alignment.center,
-                                height: 45,
-                                width: MediaQuery.of(context).size.width -
-                                    (MediaQuery.of(context).size.width / 1.5 +
-                                        40),
-                                color: Colors.white,
-                                child: Text("GEO TAG",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontFamily: 'Visbyfregular')),
-                              ),
-                            ),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return CustomInputDialog(
-                                    onSubmit: (String pin) {
-                                      String pinCode = pin;
-                                      double latitude =
-                                          _latitude; // Set latitude
-                                      double longitude =
-                                          _longitude; // Set longitude
-                                      String address =
-                                          _currentAddress; // Set address
-                                      _saveDataToApi(pinCode, latitude,
-                                          longitude, address);
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          )
-                  ],
-                ),
-                SizedBox(height: 12.0),
-                Card(
-                  shape: Border.all(
-                      width: 0,
-                      color:
-                          Colors.black), // Optional border for visual clarity
-
-                  child: Container(
-                    height: 45,
-                    color: Colors.white,
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'MOBILE NUMBER',
-                          style: TextStyle(
-                              fontSize: 16, fontFamily: 'Visbyfregular'),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              widget.loginResponse.data.mobile,
-                              style: TextStyle(
-                                  fontSize: 16, fontFamily: 'Visbyfregular'),
-                            ),
-                            Icon(
-                              CupertinoIcons.check_mark_circled_solid,
-                              color: Colors.green,
-                            )
-                          ],
-                        )
-                      ],
-                    ),
                   ),
-                ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => (KYCUpdatePage(widget.loginResponse,widget.username,))));
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
+                  isLoading == 1
+                      ? Center(
+                    child: CircularProgressIndicator(
                       color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                  )
+                      : GestureDetector(
+                    child: Card(
+                      shape: Border.all(width: 0, color: Colors.black),
+                      child: Container(
+                        alignment: Alignment.center,
+                        height: 45,
+                        width: MediaQuery.of(context).size.width -
+                            (MediaQuery.of(context).size.width / 1.5 +
+                                40),
+                        color: Colors.white,
+                        child: Text("GEO TAG",
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Visbyfregular')),
+                      ),
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CustomInputDialog(
+                            onSubmit: (String pin) {
+                              String pinCode = pin;
+                              double latitude =
+                                  _latitude; // Set latitude
+                              double longitude =
+                                  _longitude; // Set longitude
+                              String address =
+                                  _currentAddress; // Set address
+                              _saveDataToApi(pinCode, latitude,
+                                  longitude, address);
+                            },
+                          );
+                        },
+                      );
+                    },
+                  )
+                ],
+              ),
+              SizedBox(height: 12.0),
+              Card(
+                shape: Border.all(
+                    width: 0,
+                    color:
+                    Colors.black), // Optional border for visual clarity
+
+                child: Container(
+                  height: 45,
+                  color: Colors.white,
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'MOBILE NUMBER',
+                        style: TextStyle(
+                            fontSize: 16, fontFamily: 'Visbyfregular'),
+                      ),
+                      Row(
                         children: [
                           Text(
-                            'KYC Update',
+                            widget.loginResponse.data.mobile,
                             style: TextStyle(
                                 fontSize: 16, fontFamily: 'Visbyfregular'),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
+                          Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            color: Colors.green,
                           )
                         ],
-                      ),
-                    ),
+                      )
+                    ],
                   ),
                 ),
-                SizedBox(height: 12.0),
-                Card(
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => (KYCUpdatePage(widget.loginResponse,widget.username,))));
+                },
+                child: Card(
                   shape: Border.all(
                       width: 0,
                       color:
-                          Colors.black), // Optional border for visual clarity
+                      Colors.black), // Optional border for visual clarity
                   child: Container(
                     height: 45,
                     color: Colors.white,
@@ -484,7 +492,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'APPLY FOR LOAN',
+                          'KYC Update',
                           style: TextStyle(
                               fontSize: 16, fontFamily: 'Visbyfregular'),
                         ),
@@ -500,135 +508,165 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (TransactionHistoryPage(
-                            loginResponse: widget.loginResponse,
-                            username: widget.username)),
+              ),
+              SizedBox(height: 12.0),
+              Card(
+                shape: Border.all(
+                    width: 0,
+                    color:
+                    Colors.black), // Optional border for visual clarity
+                child: Container(
+                  height: 45,
+                  color: Colors.white,
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'APPLY FOR LOAN',
+                        style: TextStyle(
+                            fontSize: 16, fontFamily: 'Visbyfregular'),
                       ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Row(
                         children: [
-                          Text(
-                            'TRANSACTION HISTORY',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
+                          Icon(
+                            CupertinoIcons.arrow_right,
+                            color: Colors.green,
                           )
                         ],
-                      ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (TransactionHistoryPage(
+                          loginResponse: widget.loginResponse,
+                          username: widget.username)),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'TRANSACTION HISTORY',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (WithdrawalAndDepositHistory(
-                            loginResponse: widget.loginResponse,
-                            username: widget.username)),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Withdrwal and Deposit History',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (WithdrawalAndDepositHistory(
+                          loginResponse: widget.loginResponse,
+                          username: widget.username)),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Withdrwal and Deposit History',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (CSPAnnualReportPage()),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'CSP Annual Reports',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (MonthWiseledgerReport()),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'CSP Annual Reports',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
-              ],
-            ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+            ],
           ),
         ),
       ),
@@ -908,7 +946,7 @@ class _EarningPageState extends State<EarningPage> {
   AppColors appColors = new AppColors();
   // Set your progress value here
   int profitIncrease=1;
-
+  final currencyFormatter = NumberFormat('#,##0', 'en_US');
   int _viewType = 0;
   @override
   Widget build(BuildContext context) {
@@ -967,7 +1005,8 @@ class _EarningPageState extends State<EarningPage> {
                                         ));
                                   },
                                   child: Text(
-                                    '₹ ${commisionDetailsResponse.data.myIncomeResult}',
+
+                                    '₹ ${currencyFormatter.format(commisionDetailsResponse.data.myIncomeResult)}',
                                     style: TextStyle(
                                         fontSize: 40,
                                         fontFamily: 'Visbybold',
@@ -978,7 +1017,7 @@ class _EarningPageState extends State<EarningPage> {
                                   width: 8,
                                 ),
                                 Container(
-                                  width: 60,
+                                  padding: EdgeInsets.only(left: 4,right: 4),
                                   alignment: Alignment.center,
                                   height: 30,
                                   decoration: BoxDecoration(
@@ -1009,12 +1048,12 @@ class _EarningPageState extends State<EarningPage> {
                             Text(
                               "Best month Earnings ₹${bestMonthEarning} (${bestMonth})",
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 15,
                                 color: Colors.white,
                                 fontFamily: 'Visbyfregular',
                               ),
                             ),
-                            Text("Note:- This data is tentative data.",style: TextStyle(color: appColors.white,fontSize: 12,),textAlign: TextAlign.left,),
+                            Text("Note:- This is tentative data.",style: TextStyle(color: appColors.white,fontSize: 12,),textAlign: TextAlign.left,),
 
 
                           ],
@@ -1115,7 +1154,7 @@ class _EarningPageState extends State<EarningPage> {
                                           },
                                           child: Container(
                                             alignment: Alignment.bottomCenter,
-                                            height: 30,
+
                                             width: 90,
                                             child: Column(
                                               mainAxisAlignment:
@@ -1526,7 +1565,7 @@ class _EarningPageState extends State<EarningPage> {
                             height: 2,
 
                           ),
-                             Text("**This data is tentative data.",style: TextStyle(color: appColors.mainAppColor,fontSize: 12,),textAlign: TextAlign.left,),
+                             Text("**This is tentative data.",style: TextStyle(color: appColors.mainAppColor,fontSize: 12,),textAlign: TextAlign.left,),
 
                             ],
                           ),
@@ -2459,7 +2498,7 @@ class _LeaderBoardState extends State<LeaderBoard>
   AppColors appColors = new AppColors();
   int _current = 0;
   late GifController _controllerGif;
-
+  int isLoading=0;
   final CarouselController _controller = CarouselController();
   LeaderBoardDataResponse earningsData =
       LeaderBoardDataResponse(statusCode: 0, message: "", data: []);
@@ -2477,9 +2516,9 @@ class _LeaderBoardState extends State<LeaderBoard>
   }
 
   final List<String> imgList = [
-    "assets/images/leaderboardbanner.gif",
-    "assets/images/leaderboardbanner.gif",
-    "assets/images/leaderboardbanner.gif"
+    "assets/images/banner3.gif",
+    "assets/images/banner2.gif",
+
   ];
   Widget buildDot({required int index}) {
     return Container(
@@ -2498,17 +2537,22 @@ class _LeaderBoardState extends State<LeaderBoard>
 
     final api = Provider.of<ApiService>(context, listen: false);
     return api.getLeaderBoardData().then((value) {
-      if (value.data.length > 1) {
+      if (value.data.isNotEmpty) {
         setState(() {
           earningsData = value;
+          isLoading=1;
         });
       } else {
-        setState(() {});
+        setState(() {
+          isLoading=2;
+
+        });
+
         QuickAlert.show(
           context: context,
           type: QuickAlertType.error,
           title: 'Oops...',
-          text: 'Sorry, no record found',
+          text: 'Sorry, no record',
           backgroundColor: Colors.white,
           titleColor: appColors.mainAppColor,
           textColor: appColors.mainAppColor,
@@ -2566,7 +2610,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                     SizedBox(height: MediaQuery.of(context).size.height / 50),
                     CarouselSlider.builder(
                       itemCount:
-                          3, // Replace '3' with the total number of items
+                          2, // Replace '3' with the total number of items
                       itemBuilder:
                           (BuildContext context, int index, int realIndex) {
                         return Card(
@@ -2580,7 +2624,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                 borderRadius: BorderRadius.circular(15.0),
                                 child: Image.asset(
                                   imgList
-                                      .elementAt(0)
+                                      .elementAt(index)
                                       .toString(), // Replace with your image URL
                                   fit: BoxFit
                                       .cover, // Adjust the fit as needed (contain, cover, fill, etc.)
@@ -2597,12 +2641,12 @@ class _LeaderBoardState extends State<LeaderBoard>
                             true, // Enable infinite scroll if needed
                         reverse:
                             false, // Set true/false for reversing the items
-                        autoPlay: false, // Set true/false for autoplay
+                        autoPlay: true, // Set true/false for autoplay
                         autoPlayInterval:
-                            Duration(seconds: 3), // Autoplay interval if needed
+                            Duration(seconds: 10), // Autoplay interval if needed
                         autoPlayAnimationDuration: Duration(
-                            milliseconds: 800), // Autoplay animation duration
-                        pauseAutoPlayOnTouch: true,
+                            milliseconds: 3000), // Autoplay animation duration
+                        pauseAutoPlayOnTouch: false,
                         // Pause autoplay on touch
 
                         onPageChanged: (index, reason) {
@@ -2617,7 +2661,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
-                        3, // Replace '3' with the total number of items
+                       2, // Replace '3' with the total number of items
                         (index) => buildDot(index: index),
                       ),
                     ),
@@ -2625,14 +2669,15 @@ class _LeaderBoardState extends State<LeaderBoard>
                   ],
                 ),
               ),
-              earningsData.statusCode != 0
-                  ? Stack(
+              isLoading != 0
+                  ?  isLoading ==1?Stack(
                       alignment: Alignment.topCenter,
                       children: [
                         Container(
                             alignment: Alignment.center,
                             height: MediaQuery.of(context).size.height / 1.7,
                             child: null),
+
                         Positioned(
                           top: 30,
                           child: Container(
@@ -2650,7 +2695,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                 ),
                               ),
                               padding: EdgeInsets.only(
-                                  top: 35, left: 10, right: 10, bottom: 10),
+                                  top: 65, left: 10, right: 10, bottom: 10),
                               //  margin: EdgeInsets.only(top: 30,left: 10,right: 10),
                               child: MediaQuery.removePadding(
                                 context: context,
@@ -2717,7 +2762,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                                         .width /
                                                     3,
                                                 child: Text(
-                                                  item.cspname,
+                                                  item.cspName,
                                                   style: TextStyle(
                                                     fontSize: 15,
                                                     color: Colors.white,
@@ -2731,10 +2776,14 @@ class _LeaderBoardState extends State<LeaderBoard>
                                           ),
                                           GestureDetector(
                                             child: Text(
-                                              item.totalCommission.toString(),
+                                              item.payableToCsp.toString(),
                                               style: TextStyle(
                                                 fontSize: 15,
                                                 color: Colors.white,
+                                                decorationThickness: 1,
+                                                decoration: TextDecoration.underline,
+
+                                                decorationColor: Colors.white,
                                                 fontWeight: isFirstItem
                                                     ? FontWeight.bold
                                                     : FontWeight.normal,
@@ -2745,8 +2794,8 @@ class _LeaderBoardState extends State<LeaderBoard>
                                                   context,
                                                   MaterialPageRoute(
                                                     builder: (context) =>
-                                                        LeaderBoardItemDetails(
-                                                            item.koid),
+                                                        TransactionDetailsPageByCode(
+                                                             datum: item,),
                                                   ));
                                             },
                                           ),
@@ -2760,6 +2809,9 @@ class _LeaderBoardState extends State<LeaderBoard>
                           ),
                         ),
                         Positioned(
+                          top:78,
+                          child:  Text('Last Month Achievers',style: TextStyle(color: Colors.white,fontSize: 16,fontFamily: 'Visbyfregular'),),),
+                        Positioned(
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white38,
@@ -2772,7 +2824,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                           ),
                         ),
                       ],
-                    )
+                    ):Container()
                   : CircularProgressIndicator(
                       color: appColors.white,
                     ),
@@ -2799,8 +2851,9 @@ class _HomePageviewState extends State<HomePageview> {
   late double _opacity = 1.0;
   int isLoading = 0;
   late CommisionDetailsResponse commisionDetailsResponse;
+  late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsResponse(statusCode: 0, message: "", data: []);
 
-  //CommisionDetailsResponse commisionDetailsResponse=CommisionDetailsResponse(statusCode: 0, message: "",data:);
+
   AppColors appColors = AppColors();
   int targettedAmount = 0;
   int completedAmountPer=0;
@@ -2810,6 +2863,7 @@ class _HomePageviewState extends State<HomePageview> {
   @override
   void initState() {
     getTargetAmount();
+    _getTaskSlabDetails();
     getCommisionDetail();
     super.initState();
 
@@ -2859,7 +2913,34 @@ class _HomePageviewState extends State<HomePageview> {
       }
     });
   }
+  Future<Null> _getTaskSlabDetails() {
 
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getTaskSlabDetails()
+        .then((value) {
+      if (value.statusCode == 200) {
+        setState(() {
+          getTaskSlabDetailsResponse = value;
+          //isLoading = 1;
+        });
+      } else {
+        setState(() {
+
+        });
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -2934,17 +3015,41 @@ class _HomePageviewState extends State<HomePageview> {
                                     color: Colors.black54,
                                     fontFamily: 'Visbyfregular'),
                               ),
-                              Container(
-                                alignment: Alignment.center,
-                                // width: 100,
-                                child: Text(
-                                  '₹${currencyFormatter.format(targettedAmount)}',
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    color: Colors.black,
+                              Padding(padding: EdgeInsets.only(left: 25),child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '₹${currencyFormatter.format(targettedAmount)}',
+                                    style: TextStyle(
+                                      fontSize: 26,
+                                      color: Colors.black,
+                                    ),
                                   ),
-                                ),
-                              ),
+                                  SizedBox(width: 10,),
+                                  completedAmountPer==0?Container(
+                                      height: 14,width: 14,
+                                      child: CircularProgressIndicator(color: appColors.mainAppColor,strokeWidth: 2,)):
+                                  GestureDetector(child: Icon(Icons.info_outlined,color: appColors.mainAppColor,size: 15,),
+                                  onTap: (){
+
+                                    for(int i=0;i<getTaskSlabDetailsResponse.data.length;i++){
+                                      var arr=getTaskSlabDetailsResponse.data[i].slabs.split("-");
+                                      print("check it ${arr[0]}, ${arr[1]}, ${targettedAmount}");
+                                      if( int.parse(arr[0]) <=targettedAmount && int.parse(arr[1])>=targettedAmount ){
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => SlabDetailsPage(getTaskSlabDetailsResponse.data[i]),
+                                            )
+                                        );
+                                      }
+                                    }
+                                  },
+                                  )
+
+                                ],
+                              ),),
+
                               Column(
                                 children: [
                                   Container(
@@ -3039,10 +3144,11 @@ class _HomePageviewState extends State<HomePageview> {
                                       child: Center(
                                           child: Text(
                                         isLoading == 1
-                                            ? '${commisionDetailsResponse.data.comparisonResult} people\nwill earn\nmore\ncommission'
+                                            ? 'Current Earning\n₹${commisionDetailsResponse.data.myIncomeResult.toInt()}\n${commisionDetailsResponse.data.comparisonResult} people are earning\nmore commission'
                                             : "Please wait..\nyour data\nis fetching",
                                         style: TextStyle(
                                           fontSize: 17,
+                                          fontFamily: 'Visbyfregular'
                                         ),
                                       )),
                                     ),
@@ -3269,7 +3375,10 @@ class _HomePageviewState extends State<HomePageview> {
           isLoading = 1;
         });
       } else {
-        setState(() {});
+        setState(() {
+          isLoading = 1;
+        });
+
         QuickAlert.show(
           context: context,
           type: QuickAlertType.error,
@@ -3281,6 +3390,22 @@ class _HomePageviewState extends State<HomePageview> {
           confirmBtnColor: appColors.mainAppColor,
         );
       }
+    }).catchError((_){
+      setState(() {
+        isLoading = 1;
+      });
+
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.error,
+        title: 'Oops...',
+        text: 'Sorry, no record found',
+        backgroundColor: Colors.white,
+        titleColor: appColors.mainAppColor,
+        textColor: appColors.mainAppColor,
+        confirmBtnColor: appColors.mainAppColor,
+      );
+
     });
   }
 }

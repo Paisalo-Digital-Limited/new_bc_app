@@ -11,7 +11,7 @@ String leaderBoardDataResponseToJson(LeaderBoardDataResponse data) => json.encod
 class LeaderBoardDataResponse {
   int statusCode;
   String message;
-  List<LeaderBoardItemData> data;
+  List<Datum> data;
 
   LeaderBoardDataResponse({
     required this.statusCode,
@@ -22,7 +22,7 @@ class LeaderBoardDataResponse {
   factory LeaderBoardDataResponse.fromJson(Map<String, dynamic> json) => LeaderBoardDataResponse(
     statusCode: json["statusCode"],
     message: json["message"],
-    data: List<LeaderBoardItemData>.from(json["data"].map((x) => LeaderBoardItemData.fromJson(x))),
+    data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -32,30 +32,46 @@ class LeaderBoardDataResponse {
   };
 }
 
-class LeaderBoardItemData {
-  String koid;
-  String cspname;
-  double totalCommission;
-  dynamic transctionResultVm;
+class Datum {
+  String cspCode;
+  String cspName;
+  double payableToCsp;
+  String month;
+  String year;
 
-  LeaderBoardItemData({
-    required this.koid,
-    required this.cspname,
-    required this.totalCommission,
-    this.transctionResultVm,
+  Datum({
+    required this.cspCode,
+    required this.cspName,
+    required this.payableToCsp,
+    required this.month,
+    required this.year,
   });
 
-  factory LeaderBoardItemData.fromJson(Map<String, dynamic> json) => LeaderBoardItemData(
-    koid: json["koid"],
-    cspname: json["cspname"],
-    totalCommission: json["totalCommission"].toDouble(),
-    transctionResultVm: json["transctionResultVm"],
+  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+    cspCode: json["cspCode"],
+    cspName: json["cspName"],
+    payableToCsp: json["payableToCSP"]?.toDouble(),
+    month: json["month"]!,
+    year: json["year"],
   );
 
   Map<String, dynamic> toJson() => {
-    "koid": koid,
-    "cspname": cspname,
-    "totalCommission": totalCommission,
-    "transctionResultVm": transctionResultVm,
+    "cspCode": cspCode,
+    "cspName": cspName,
+    "payableToCSP": payableToCsp,
+    "month": month,
+    "year": year,
   };
+}
+
+class EnumValues<T> {
+  Map<String, T> map;
+  late Map<T, String> reverseMap;
+
+  EnumValues(this.map);
+
+  Map<T, String> get reverse {
+    reverseMap = map.map((k, v) => MapEntry(v, k));
+    return reverseMap;
+  }
 }

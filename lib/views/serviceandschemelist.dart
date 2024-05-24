@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:new_bc_app/model/getCSPAppTransactionDetails.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/const/AppColors.dart';
 import 'package:new_bc_app/model/servicelistmodel.dart';
@@ -98,6 +99,7 @@ class ServicePage extends StatefulWidget {
 class _ServicePageState extends State<ServicePage> {
 
 ServiceListModel serviceListModel=new ServiceListModel(statusCode: 100 , message: "", data: []);
+GetCspAppTransactionDetails getCspAppTransactionDetails=GetCspAppTransactionDetails(statusCode: 100, message: "", data: []);
 int apiResponse=1;
 AppColors appColors=new AppColors();
   @override
@@ -112,140 +114,50 @@ AppColors appColors=new AppColors();
 
     return Scaffold(
       backgroundColor: appColors.mainAppColor,
-      body: !serviceListModel.data.isEmpty
-          ?Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: ToggleList(
-          divider: const SizedBox(height: 10),
-          toggleAnimationDuration: const Duration(milliseconds: 400),
-          scrollPosition: AutoScrollPosition.begin,
-          trailing: const Padding(
-            padding: EdgeInsets.all(10),
-            child: Icon(Icons.expand_more),
-          ),
-          children: List.generate(
-            serviceListModel.data.length,
-                (index) => ToggleListItem(
-              title: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      serviceListModel.data[index].type,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge!
-                          .copyWith(fontSize: 15, fontWeight: FontWeight.bold),
-                    )
-                  ],
+      body: !getCspAppTransactionDetails.data.isEmpty
+          ?SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height-200,
+          child: ListView(
+            children: getCspAppTransactionDetails.data!.map((category) {
+              final categoryName = category.keys.first;
+              final categoryData = category.values.first;
+
+              return Container(child: Card(
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.0),
                 ),
-              ),
-              divider: const Divider(
-                color: Color(0xFFEFEFEF),
-                height: 1,
-                thickness: 1,
-              ),
-              content: Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(10),
-                  ),
-                  color: Colors.white,
+                elevation: 2.0,
+                margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 5.0),
+                child: ExpansionTile(
+                  backgroundColor: Colors.white,
+                  collapsedIconColor: appColors.mainAppColor,
+                  collapsedBackgroundColor: Colors.white,
+                  title: Text(categoryName,style: TextStyle(color: appColors.mainAppColor),),
+                  children: categoryData.map((datum) {
+                    return ListTile(
+                      tileColor: Colors.white,
+                      title: Text("₹${datum.range.toString()}",style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Rural: ₹${datum.rural}'),
+                            Text('Urban: ₹${datum.urban}'),
+                            Divider(height: 1,)
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-                child:
-                Container(
-                 child: Column(
-                   children: [
-
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text('Range',
-                             style: TextStyle(color: Colors.grey.shade500)),
-                         Text(
-                           'upto ₹${serviceListModel.data[index].data[0].range.split("-")[0]} - ₹${serviceListModel.data[index].data[0].range.split("-")[1]}',
-                           style: TextStyle(color: Colors.grey.shade500),
-                         )
-                       ],
-                     ), SizedBox(height: 5,),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text('Rural',
-                             style: TextStyle(color: Colors.grey.shade500)),
-                         Text(
-                           'upto ₹${serviceListModel.data[index].data[0].rural}',
-                           style: TextStyle(color: Colors.grey.shade500),
-                         )
-
-                       ],
-                     ), SizedBox(height: 5,),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text('Urban',
-                             style: TextStyle(color: Colors.grey.shade500)),
-                         Text(
-                           'upto ₹${serviceListModel.data[index].data[0].urban}',
-                           style: TextStyle(color: Colors.grey.shade500),
-                         ),
-
-
-                       ],
-                     ), SizedBox(height: 5,),  Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text('Urban CSP',
-                             style: TextStyle(color: Colors.grey.shade500)),
-                         Text(
-                           'upto ${serviceListModel.data[index].data[0].cspUrbanPercentage}%',
-                           style: TextStyle(color: Colors.grey.shade500),
-                         ),
-
-
-
-                       ],
-                     ),
-                     SizedBox(height: 5,),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-
-                         Text('Rural CSP',
-                             style: TextStyle(color: Colors.grey.shade500)),
-                         Text(
-                           'upto ${serviceListModel.data[index].data[0].cspRuralPercentage}%',
-                           style: TextStyle(color: Colors.grey.shade500),
-                         ),
-
-
-
-
-                       ],
-                     ),
-                   ],
-                 ),
-
-                ),
-              ),
-              onExpansionChanged: _expansionChangedCallback,
-              headerDecoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(1)),
-              ),
-              expandedHeaderDecoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(10),
-                ),
-              ),
-            ),
+              ),);
+            }).toList(),
           ),
         ),
-      ) :(apiResponse==1? Center(
+      ):(apiResponse==1? Center(
         child: Center(
           child: CircularProgressIndicator(
             color: Colors.white,
@@ -261,33 +173,15 @@ AppColors appColors=new AppColors();
     try{
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // Perform shared preferences operations after obtaining the instance.
+final api=Provider.of<ApiService>(context,listen: false);
+return api.getCspAppTransactionDetails().then((value) => {
 
-      final api = Provider.of<ApiService>(context, listen: false);
-      return api
-          .getServiceList()
-          .then((value) {
-        if (value.data.isNotEmpty) {
-          setState(() {
-            serviceListModel = value;
-          });
-          apiResponse=1;
-        }else{
-          setState(() {
-            apiResponse=0;
-          });
-          QuickAlert.show(
-              context: context,
-              type: QuickAlertType.error,
-              title: 'Oops...',
-              text: 'Sorry, no record found',
-              backgroundColor: Colors.white,
-              titleColor: appColors.mainAppColor,
-              textColor: appColors.mainAppColor,
-              confirmBtnColor: appColors.mainAppColor
-          );
+  setState(() {
+    getCspAppTransactionDetails=value;
+  })
 
-        }
-      });
+});
+
     }catch(_){
       apiResponse=0;
       QuickAlert.show(
@@ -453,7 +347,7 @@ class _SlabCustomListState extends State<SlabCustomList> {
       margin: EdgeInsets.all(3),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: widget.index==0?AssetImage('assets/images/list_card_bg.png'):AssetImage('assets/images/list_card_grey_bg.png'), // Replace with the actual image path
+          image: AssetImage('assets/images/list_card_bg.png'), // Replace with the actual image path
           fit: BoxFit.fitWidth,
         ),
       ),
@@ -545,9 +439,10 @@ class _SlabCustomListState extends State<SlabCustomList> {
                                 "${widget.slabListData.pmjdy}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
+                                  fontWeight: FontWeight.bold,
                                     fontSize: 15,
-                                    color: widget.index==0?
-                                    appColors.mainAppColor:appColors.grey),
+                                    color:
+                                    appColors.mainAppColor ),
                               ),
                             ),
                           ),
@@ -583,9 +478,9 @@ class _SlabCustomListState extends State<SlabCustomList> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     fontSize: 15,
+                                    fontWeight: FontWeight.bold,
                                     color:
-                                    widget.index==0?
-                                    appColors.mainAppColor:appColors.grey),
+                                    appColors.mainAppColor),
                               ),
                             ),
                           ),
@@ -621,9 +516,10 @@ class _SlabCustomListState extends State<SlabCustomList> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     fontSize: 15,
+                                    fontWeight: FontWeight.bold,
                                     color:
-                                    widget.index==0?
-                                    appColors.mainAppColor:appColors.grey),
+
+                                    appColors.mainAppColor),
                               ),
                             ),
                           ),
@@ -658,10 +554,10 @@ class _SlabCustomListState extends State<SlabCustomList> {
                                 "${widget.slabListData.apy}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
+                                    fontWeight: FontWeight.bold,
                                     fontSize: 15,
                                     color:
-                                    widget.index==0?
-                                    appColors.mainAppColor:appColors.grey),
+                                    appColors.mainAppColor),
                               ),
                             ),
                           ),

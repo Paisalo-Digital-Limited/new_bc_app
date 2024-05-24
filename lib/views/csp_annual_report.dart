@@ -1,3 +1,5 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:intl/intl.dart';
 import 'package:new_bc_app/model/annualcspreport.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +12,8 @@ import '../const/AppColors.dart';
 import 'homepage.dart';
 
 class CSPAnnualReportPage extends StatefulWidget {
-  const CSPAnnualReportPage({super.key});
+ final String monthYear;
+   CSPAnnualReportPage({required this.monthYear});
 
   @override
   State<CSPAnnualReportPage> createState() => _CSPAnnualReportPageState();
@@ -19,19 +22,79 @@ class CSPAnnualReportPage extends StatefulWidget {
 class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
   CspAnnualReport cspAnnualReport =
       CspAnnualReport(statusCode: 100, message: "", data: []);
+  int selectedYear = DateTime.now().year;
+  String selectedMonth = '';
+  final List<String> months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+  void _showMonthDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Theme(
+            data: ThemeData.dark().copyWith(
+          dialogBackgroundColor: Colors.white, // Ensure bright white background
+        ), child: AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('Select a Month',style: TextStyle(color: appColors.mainAppColor)),
+          content: Container(
+            // Adjust the height as needed
+            height: 300.0,
+            width: double.maxFinite,
+            child: ListView.separated(
+              separatorBuilder: (BuildContext context, int index) => Divider(
+                color: Colors.grey, // Separator color
+              ),
+              itemCount: months.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
+                  height: 40,
+                  child: ListTile(
+                    leading: Icon(Icons.date_range_sharp,size: 20,color: appColors.mainAppColor,),
+                    title: Text(months[index],style: TextStyle(color: appColors.mainAppColor),),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _getCSPAnnualReport(months[index]);
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),);
+      },
+    );
+  }
+
+
   @override
   void initState() {
-    _getCSPAnnualReport();
+    var now = DateTime.now();
+    var monthFormat = DateFormat.MMMM();
+    String monthName = monthFormat.format(now);
+    _getCSPAnnualReport(widget.monthYear.split(" ")[0]);
   }
   int apiResponse = 1;
   AppColors appColors = new AppColors();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: appColors.mainAppColor,
+        backgroundColor: appColors.white,
         appBar: AppBar(
           iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: appColors.mainAppColor,
+
           leading: IconButton(
             icon: Icon(
               Icons.close,color: Colors.white, // Change the back icon here
@@ -41,82 +104,69 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
             },
           ),
           title: Text(
-            'CSP Annual Reports',
+            'CSP Ledger ${widget.monthYear}',
             style: TextStyle(color: Colors.white,fontSize: 16),
           ),
         ),
-        body:cspAnnualReport.data.length<1?(apiResponse == 1
-            ? Center(
+        body:cspAnnualReport.data.length<1? Center(
           child: Center(
             child: CircularProgressIndicator(
               color: Colors.white,
             ),
           ),
-        )
-            : Center()): ListView.builder(
-          itemCount: cspAnnualReport.data.length, // Change this to the number of cards you want
-          itemBuilder: (context, index) {
-            return GestureDetector(child: Container(
-
-              child: Card(
-                elevation: 6,
-                clipBehavior: Clip.antiAlias,
-                color: Colors.white,
-
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5)
-                ),
-                child: Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.only(left: 10,right: 20,top: 8,bottom: 8),
-                  alignment: Alignment.centerLeft,
-                  child:Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ):SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Row(children: [
-                        Container(height: 50,width: 50,child: Image(image: AssetImage("assets/images/pdf_ic.png")),)
-                        ,
-                        SizedBox(width: 10,),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                          Text(cspAnnualReport.data[index].year,style: TextStyle(fontSize: 16,color: Colors.grey.shade500),),
-                          Text(cspAnnualReport.data[index].fileName,style: TextStyle(fontSize: 11,color: appColors.mainAppColor),),
-                        ],)                     ],)
-                      ,
-                      Row(children: [
-                        Icon(Icons.arrow_forward_ios_outlined,size: 15,color: Colors.grey.shade500,)
-                      ],)
-
-                    ],
-                  ),),
+                      Container(width: 150,
+                        padding: EdgeInsets.only(right:10),
+                        child:   Image.asset("assets/images/logo.png"),)
 
 
-                  // Add other widgets as needed
+                    ],),
+                  Padding(padding: EdgeInsets.only(left: 20)),
+                  Text("Banking Monthly Ledger",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),)
+                  , SizedBox(height: 8),
+                  Text("Date: ${DateFormat('yyyy-MM-dd').format(DateTime.now())}"),
+                  Text("Month: ${DateFormat('MMMM').format(DateTime.now())}, Year: ${DateFormat('yyyy').format(DateTime.now())}"),
+                  Text("CSP Code: ${cspAnnualReport.data[0].cspCode}"),
+                  Text("CSP Name: ${cspAnnualReport.data[0].cspName}"),
+                  Text("Circle Name: ${cspAnnualReport.data[0].circleName}"),
+                  SizedBox(height: 16),
+                  CustomTable(data: cspAnnualReport.data),
+                  SizedBox(height: 16),
+                  Text("For and on behalf of Paisalo This is a system-generated report and does not require any signature",style: TextStyle(fontWeight: FontWeight.bold),),
 
+                ],
               ),
+
             ),
-            onTap: (){
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => (AnnualReportPdfPage(pdfUrl:'https://erp.paisalo.in:981/losdoc/CSPApprovalDocs/${cspAnnualReport.data[index].fileName.toString().trim()}',year:cspAnnualReport.data[index].year)),
-                ),
-              );
-            },);
-          },
-        ),
+          ),
+        )
+
 
     );
   }
 
-  Future<void> _getCSPAnnualReport() async {
+  Future<void> _getCSPAnnualReport(String monthName) async {
+    EasyLoading.show(status: 'Loading...',);
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    var now = DateTime.now();
+    var monthFormat = DateFormat.MMMM(); // Month name format
+    var yearFormat = DateFormat.y(); // Year format
 
+ // Getting current month name
+    String year = yearFormat.format(now);
     final api = Provider.of<ApiService>(context, listen: false);
     return api
-        .getCSPAnnualReport(prefs.get('username').toString())
+        .getCSPAnnualReport(prefs.get('username').toString(),monthName,year)
         .then((value) {
       if (value.data.length > 0) {
         setState(() {
@@ -124,10 +174,14 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
           print(
               "");
         });
+        EasyLoading.dismiss();
       }else{
         setState(() {
+         cspAnnualReport= CspAnnualReport(statusCode: 100, message: "", data: []);
           apiResponse=0;
         });
+        EasyLoading.dismiss();
+
         QuickAlert.show(
             context: context,
             type: QuickAlertType.error,
@@ -137,6 +191,10 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
             titleColor: appColors.mainAppColor,
             textColor: appColors.mainAppColor,
             confirmBtnColor: appColors.mainAppColor,
+          onConfirmBtnTap: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+          }
         );
       }
     });
@@ -145,6 +203,150 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
 
 
 
+}
+class _MonthPickerDialog extends StatefulWidget {
+  final String selectedMonth;
+
+  _MonthPickerDialog({
+    required this.selectedMonth,
+  });
+
+  @override
+  __MonthPickerDialogState createState() => __MonthPickerDialogState();
+}
+
+class __MonthPickerDialogState extends State<_MonthPickerDialog> {
+  late String selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedMonth = widget.selectedMonth;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Select Month'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          DropdownButton<String>(
+            value: selectedMonth,
+            items: <String>[
+              'January', 'February', 'March', 'April',
+              'May', 'June', 'July', 'August',
+              'September', 'October', 'November', 'December'
+            ].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? value) {
+              setState(() {
+                selectedMonth = value!;
+              });
+            },
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(selectedMonth);
+          },
+          child: Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+class CustomTable extends StatelessWidget {
+  final List<Datum> data;
+
+  CustomTable({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Table(
+      columnWidths: {
+        0: FractionColumnWidth(0.13),  // 10% of the table width
+        1: FractionColumnWidth(0.47),  // 50% of the table width
+        2: FractionColumnWidth(0.2),  // 20% of the table width
+        3: FractionColumnWidth(0.2),  // 20% of the table width
+      },
+      border: TableBorder.all(),
+      children: [
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey[200]),
+          children: [
+            tableCell('S.No', isHeader: true,),
+            tableCell('Description with Code', isHeader: true),
+            tableCell('TXN Count', isHeader: true),
+            tableCell('Commission Amount', isHeader: true),
+          ],
+        ),
+        ...data.asMap().entries.map((entry) {
+          int index = entry.key;
+          Datum record = entry.value;
+          return TableRow(
+            children: [
+              tableCell((index + 1).toString()),
+              tableCell(record.transactionType),
+              tableCell(record.numTransactionsOrAvgBal.toString()),
+              tableCell(record.payableToCsp.toString()),
+            ],
+          );
+        }).toList(),
+        TableRow(
+          decoration: BoxDecoration(color: Colors.white),
+          children: [
+            tableCell('', isHeader: false),
+            tableCell('', isHeader: false),
+            tableCell('Total Commission', isHeader: true),
+            tableCell("${data.fold(0.00, (sum, item) => sum + item.payableToCsp.toDouble()).toStringAsFixed(2)}", isHeader: true),
+          ],
+        ),      TableRow(
+          decoration: BoxDecoration(color: Colors.white),
+          children: [
+            tableCell('', isHeader: false),
+            tableCell('', isHeader: false),
+            tableCell('Applicable TDS (5%)', isHeader: true),
+            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.05).toStringAsFixed(2)}", isHeader: true),
+          ],
+        ),     TableRow(
+          decoration: BoxDecoration(color: Colors.white),
+          children: [
+            tableCell('', isHeader: false),
+            tableCell('', isHeader: false),
+            tableCell('Payable Commission', isHeader: true),
+            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.95).toStringAsFixed(2)}", isHeader: true),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget tableCell(String text, {bool isHeader = false}) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontSize: isHeader ? 10 : 8,
+        ),
+      ),
+    );
+  }
 }
 
 class AnnualReportPdfPage extends StatefulWidget {

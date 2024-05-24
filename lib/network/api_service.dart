@@ -12,10 +12,13 @@ import 'package:retrofit/http.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../model/CspWeeklyLazerResponse.dart';
+import '../model/TransactionDetailsByCodeModel.dart';
 import '../model/annualcspreport.dart';
 import '../model/bannerurlmodel.dart';
+import '../model/cSPKYCDocumentModel.dart';
 import '../model/commonresponsemodel.dart';
 import '../model/commonresponsemodelInt.dart';
+import '../model/getCSPAppTransactionDetails.dart';
 import '../model/gettargetmodel.dart';
 import '../model/loginresponse.dart';
 import '../model/servicelistmodel.dart';
@@ -91,8 +94,8 @@ abstract class ApiService{
 
 
 
-  @GET("User/GetFileList")
-  Future<CspAnnualReport> getCSPAnnualReport(@Query("cspCode") String cspCode);
+  @GET("BCTransaction/GetMonthlyCommissionDetails")
+  Future<CspAnnualReport> getCSPAnnualReport(@Query("CspCode") String cspCode,@Query("month") String month,@Query("year") String year);
 
 
 
@@ -127,6 +130,18 @@ abstract class ApiService{
 
   @GET("BCTransaction/GetTargetStatus")
   Future<MonthlyTaskStatus> getTargetStatus(@Query("koid") String kOId,@Query("Month") String month,@Query("Year") String year);
+
+
+  @GET("BCTransaction/GetCSPKYCdocument")
+  Future<CspkycDocumentModel> getCSPKYCdocument(@Query("CspId") String CspId );
+
+  @GET("BCTransaction/GetCSPAppTransactionDetails")
+  Future<GetCspAppTransactionDetails> getCspAppTransactionDetails();
+
+  @GET("BCTransaction/GetTransactionDetailsByCode")
+  Future<TransactionDetailsByCodeModel> getTransactionDetailsByCodeModel(@Query("cspcode") String kOId,@Query("month") String month,@Query("year") String year);
+
+
 
 }
 

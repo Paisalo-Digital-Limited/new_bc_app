@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:android_path_provider/android_path_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart'as http;
 import 'package:new_bc_app/model/commonresponsemodelInt.dart';
 import 'package:new_bc_app/network/api_service.dart';
@@ -174,22 +176,31 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   int _counter = 0;
-
+  int apkDownloaded=0;
+  late String _localPath;
+  late bool _permissionReady;
+  late TargetPlatform? platform;
   @override
   void initState() {
     super.initState();
-    checkForUpdate();
-    //checkForLocalServerUpdate();
-    Timer(
-      Duration(seconds: 5),
-          () => Navigator.pushReplacement(
-        context as BuildContext,
-        MaterialPageRoute(
-          builder: (context) => (Login()),
-        ),
-      ),
-    );
+   // checkForUpdate();
+    checkForLocalServerUpdate();
+    if (Platform.isAndroid) {
+      platform = TargetPlatform.android;
+    } else {
+      platform = TargetPlatform.iOS;
+    }
+    // Timer(
+    //   Duration(seconds: 5),
+    //       () => Navigator.pushReplacement(
+    //     context as BuildContext,
+    //     MaterialPageRoute(
+    //       builder: (context) => (Login()),
+    //     ),
+    //   ),
+    // );
   }
   @override
   Widget build(BuildContext context) {
@@ -209,7 +220,98 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+  Future<bool> _checkPermission() async {
+    if (platform == TargetPlatform.android) {
+      final status = await Permission.storage.status;
+      if (status != PermissionStatus.granted) {
+        final result = await Permission.storage.request();
+        if (result == PermissionStatus.granted) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
+    return false;
+  }
+  Future<void> _prepareSaveDir() async {
+    _localPath = (await _findLocalPath())!;
 
+    print(_localPath);
+    final savedDir = Directory(_localPath);
+    bool hasExisted = await savedDir.exists();
+    if (!hasExisted) {
+      savedDir.create();
+    }
+  }
+  void initializeNotifications() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('app_icon');
+    final InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+  Future<bool> requestPermissions() async {
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+    return status.isGranted;
+  }
+  Future<void> showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'download_channel',
+      'Downloads',
+      channelDescription: 'Channel for download notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      showProgress: true,
+      maxProgress: 100,
+    );
+    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: 'item x',
+    );
+  }
+
+  Future<void> updateNotification(int progress) async {
+    final AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'download_channel',
+      'Downloads',
+      channelDescription: 'Channel for download notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      showProgress: true,
+      maxProgress: 100,
+      progress: progress,
+    );
+    final NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Downloading Paisalo BC App',
+      '$progress%',
+      platformChannelSpecifics,
+    );
+  }
+  Future<String?> _findLocalPath() async {
+    if (platform == TargetPlatform.android) {
+      return '/storage/emulated/0/Download';
+    } else {
+      var directory = await getApplicationDocumentsDirectory();
+      return directory.path + Platform.pathSeparator + 'Download';
+    }
+  }
   Future<void> checkForUpdate() async {
     try {
       await InAppUpdate.checkForUpdate().then((updateInfo) {
@@ -272,8 +374,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
           String stringValue = appVersionModel.data;
           print("Response for App Version ${stringValue}");
-
+        if(apkDownloaded==0){
           _showUpdateDialog(context,stringValue.trim());
+
+        }else if(apkDownloaded==2){
+          _showDownloadingDialog(context);
+
+        }else{
+        _showDownloadedDialog(context);
+        }
+
         } else {
           // Handle other types if necessary
         }
@@ -292,20 +402,29 @@ class _MyHomePageState extends State<MyHomePage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
+          elevation: 0,
           backgroundColor: Colors.white,
           title: Text('Update Available'),
           content: Text('A new version of the app is available. Please update to the latest version.'),
           actions: <Widget>[
             TextButton(
-              child: Text('Update Now'),
-              onPressed: () {
+              child: Text('Download App'),
+              onPressed: () async {
+                downloadApk('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
+                setState(() {
+                  Navigator.of(context).pop();
+                  _showDownloadingDialog(context);
+                });
+                  //await Clipboard.setData(ClipboardData(text: "https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp"));
+                  // copied successfully
+
                 // Navigator.pushReplacement(
                 //   context as BuildContext,
                 //   MaterialPageRoute(
                 //     builder: (context) => (MyWebView(url: url,)),
                 //   ),
                 // );
-                _launchURLBrowser('https://www.geeksforgeeks.org/');
+                //_launchURLBrowser('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
               },
             ),
             TextButton(
@@ -320,15 +439,54 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _launchURLBrowser(String urls) async {
-    var url = Uri.parse(urls);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      throw 'Could not launch $url';
+  Future<Directory> getExternalDownloadsDirectory() async {
+
+      String downloadsPath = await AndroidPathProvider.downloadsPath;
+      return Directory(downloadsPath);
+
+  }
+  Future<void> downloadApk(String url) async {
+    setState(() {
+      apkDownloaded=2;
+    });
+    try {
+      // Get the application directory to store the downloaded file
+      Directory appDocDir = await getExternalDownloadsDirectory();
+      String savePath = "${appDocDir.path}/paisalo_bc_app.apk";
+
+      // Create a Dio instance
+      Dio dio = Dio();
+
+      // Download the APK file
+      await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            print("Download progress: ${(received / total * 100).toStringAsFixed(0)}%");
+            updateNotification((received / total * 100).toInt());
+
+          }
+        },
+      );
+
+      print("APK downloaded to: $savePath");
+      setState(() {
+        apkDownloaded=1;
+        cancelNotification();
+        Navigator.of(context).pop();
+        _showDownloadedDialog(context);
+      });
+
+    } catch (e) {
+      print("Error downloading APK: $e");
+      await cancelNotification();
     }
   }
 
+  Future<void> cancelNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(0);
+  }
 
   void _downloadFile(String url) async {
     try {
@@ -383,6 +541,54 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
   }
+
+  void _showDownloadedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          title: Text('APK file Downloaded'),
+          content: Text('Updated Apk file downloaded in your download folder please install that apk file.'),
+          actions: <Widget>[
+
+            TextButton(
+              child: Text('Okay'),
+              onPressed: () {
+                exit(0);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+void _showDownloadingDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text('APK file Downloading'),
+        content: Text('Updated Apk file is downloading in your downloads folder please install that apk file after downloading.'),
+        actions: <Widget>[
+
+          TextButton(
+            child: Text('Please wait for downloading complete'),
+            onPressed: () {
+
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
 
 

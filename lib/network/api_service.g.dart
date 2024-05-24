@@ -418,9 +418,17 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<CspAnnualReport> getCSPAnnualReport(String cspCode) async {
+  Future<CspAnnualReport> getCSPAnnualReport(
+    String cspCode,
+    String month,
+    String year,
+  ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'cspCode': cspCode};
+    final queryParameters = <String, dynamic>{
+      r'CspCode': cspCode,
+      r'month': month,
+      r'year': year,
+    };
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _result = await _dio
@@ -431,7 +439,7 @@ class _ApiService implements ApiService {
     )
             .compose(
               _dio.options,
-              'User/GetFileList',
+              'BCTransaction/GetMonthlyCommissionDetails',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -675,6 +683,95 @@ class _ApiService implements ApiService {
               baseUrl,
             ))));
     final value = MonthlyTaskStatus.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<CspkycDocumentModel> getCSPKYCdocument(String CspId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'CspId': CspId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<CspkycDocumentModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetCSPKYCdocument',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = CspkycDocumentModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<GetCspAppTransactionDetails> getCspAppTransactionDetails() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<GetCspAppTransactionDetails>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetCSPAppTransactionDetails',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = GetCspAppTransactionDetails.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<TransactionDetailsByCodeModel> getTransactionDetailsByCodeModel(
+    String kOId,
+    String month,
+    String year,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'cspcode': kOId,
+      r'month': month,
+      r'year': year,
+    };
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<TransactionDetailsByCodeModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'BCTransaction/GetTransactionDetailsByCode',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            ))));
+    final value = TransactionDetailsByCodeModel.fromJson(_result.data!);
     return value;
   }
 

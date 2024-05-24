@@ -3,11 +3,14 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:new_bc_app/const/AppColors.dart';
+import 'package:new_bc_app/model/cSPKYCDocumentModel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
@@ -31,6 +34,12 @@ class KYCUpdatePage extends StatefulWidget {
 }
 
 class _KYCUpdatePageState extends State<KYCUpdatePage> {
+  int isLoading=0;
+  @override
+  void initState() {
+    getCSPKYCdocument();
+    super.initState();
+  }
   final ImagePicker _picker = ImagePicker();
   XFile? _panImage,
       _aadhaarImage,
@@ -73,7 +82,7 @@ class _KYCUpdatePageState extends State<KYCUpdatePage> {
       }
     });
   }
-
+  late CspkycDocumentModel cspkycDocumentModel;
   AppColors appColors = AppColors();
   List<String> docList = [
     "PAN",
@@ -96,8 +105,7 @@ class _KYCUpdatePageState extends State<KYCUpdatePage> {
             Navigator.pop(context);
           },
           child: Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+              Icons.close,color: Colors.white
           ),
         ),
         backgroundColor: appColors.mainAppColor,
@@ -107,13 +115,24 @@ class _KYCUpdatePageState extends State<KYCUpdatePage> {
         child:Column(
           children: [
             Text("Upload your KYC Document",style: TextStyle(color: Colors.white,fontSize: 35,fontFamily: 'Visbybold'),),
-            Container(
+           isLoading==1? Container(
               height: MediaQuery.of(context).size.height/2,
               child:
             ListView.builder(
                           itemCount: docList.length,
                           itemBuilder: (BuildContext context, int index) {
-                            return Padding(
+                            int recordFound=0;
+                            int i=0;
+                            for(i=0;i<cspkycDocumentModel.data.length;i++){
+                              if(cspkycDocumentModel.data.elementAt(i).docType.toLowerCase().trim()==docList[index].replaceAll(" ", "").toLowerCase()){
+                                recordFound=1;
+                                break;
+                              }
+
+                            }
+
+                            return recordFound==0?
+                            Padding(
                               padding: EdgeInsets.all(6),
                               child:
                               GestureDetector(
@@ -143,9 +162,28 @@ class _KYCUpdatePageState extends State<KYCUpdatePage> {
                                       Text("${docList[index]}",style: TextStyle(color: appColors.mainAppColor,fontFamily: 'Visbyfregular',fontSize: 15),),
                                     ),
                                   ))
+                            ): Padding(
+                                padding: EdgeInsets.all(6),
+                                child:Card(
+                                  elevation: 6,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6)),
+                                  color: Colors.green,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Container(
+                                    alignment: Alignment.center,
+
+                                    height: 55,
+                                    padding: EdgeInsets.all(15),
+                                    color: Colors.green,
+                                    width: MediaQuery.of(context).size.width,
+                                    child:
+                                    Text("${docList[index]} Uploaded",style: TextStyle(color: appColors.white,fontFamily: 'Visbyfregular',fontSize: 15),),
+                                  ),
+                                )
                             );
                           })
-                          ,)
+                          ,):CircularProgressIndicator(color: Colors.white,)
           ],
         ),
       ),
@@ -428,6 +466,47 @@ class _KYCUpdatePageState extends State<KYCUpdatePage> {
     }
   }
 
+  Future<void> getCSPKYCdocument() async {
+
+    EasyLoading.show(status: 'Loading...',maskType: EasyLoadingMaskType.black);
+
+
+    final api = Provider.of<ApiService>(context, listen: false);
+    return await api.getCSPKYCdocument(widget.username).then((value) async {
+      if(value.statusCode==200){
+        setState(() {
+          cspkycDocumentModel=value;
+          isLoading=1;
+        });
+
+      }else{
+        setState(() {
+          cspkycDocumentModel=value;
+          isLoading=1;
+        });
+      }
+      EasyLoading.dismiss();
+
+    }).catchError((_){ setState(() {
+      cspkycDocumentModel=CspkycDocumentModel(statusCode: 200, message: "", data: []);
+      isLoading=1;
+    });
+      
+      QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor
+
+      );
+      
+    });
+  }
+
 
 
 
@@ -464,8 +543,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
             Navigator.pop(context);
           },
           child: Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+              Icons.close,color: Colors.white
           ),
         ),
         backgroundColor: appColors.mainAppColor,
@@ -650,7 +728,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
               context: context,
               type: QuickAlertType.error,
               confirmBtnColor: appColors.mainAppColor,
-              title: "${widget.docName} Uploadinf Response",
+              title: "${widget.docName} Uploading Response",
               text: "Unauthorized Asses",
               showConfirmBtn: true,
             );
@@ -659,7 +737,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
               context: context,
               type: QuickAlertType.error,
               confirmBtnColor: appColors.mainAppColor,
-              title: "${widget.docName} Uploadinf Response",
+              title: "${widget.docName} Uploading Response",
               text: "Bad Request",
               showConfirmBtn: true,
             );
@@ -668,7 +746,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
               context: context,
               type: QuickAlertType.error,
               confirmBtnColor: appColors.mainAppColor,
-              title: "${widget.docName} Uploadinf Response",
+              title: "${widget.docName} Uploading Response",
               text: "Please check ASP code",
               showConfirmBtn: true,
             );
@@ -678,7 +756,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
             context: context,
             type: QuickAlertType.error,
             confirmBtnColor: appColors.mainAppColor,
-            title: "${widget.docName} Uploadinf Response",
+            title: "${widget.docName} Uploading Response",
             text: "Please check internet connection!!",
             showConfirmBtn: true,
           );
@@ -691,7 +769,7 @@ class _UploadImagePageState extends State<UploadImagePage> {
           context: context,
           type: QuickAlertType.error,
           confirmBtnColor: appColors.mainAppColor,
-          title: "${widget.docName} Uploadinf Response",
+          title: "${widget.docName} Uploading Response",
           text: "An error occurred: $error",
           showConfirmBtn: true,
         );

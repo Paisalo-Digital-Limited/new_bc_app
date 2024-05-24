@@ -33,7 +33,7 @@ Color getRandomLightColor() {
 class _TaskListState extends State<TaskList> {
   AppColors appColors=new AppColors();
 late MonthlyTaskStatus monthlyTaskStatus;
-  var headerList={"Target","Achived","Pending"};
+  var headerList={"Target","Achieved","Pending"};
 int isLoading=0;
   @override
   void initState() {
