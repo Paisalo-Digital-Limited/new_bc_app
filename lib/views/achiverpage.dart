@@ -98,6 +98,7 @@ late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsRes
                         child: Text(
                           "EARN MORE WITH HIGH\nCOMMISSION TASK",
                           style: TextStyle(
+                            fontFamily: 'Visbyfregular',
                             color: appColors.mainAppColor,
                             fontSize: 18,
                           ),
@@ -123,15 +124,12 @@ late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsRes
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        'COMMISSION',
+                                        'Target earning for the month',
                                         style: TextStyle(
+                                            fontFamily: 'Visbyfregular',
                                             color: Colors.white, fontSize: 16),
                                       ),
-                                      Text(
-                                        'TASKS',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16),
-                                      ),
+
                                     ],
                                   ),
                                 ),
@@ -141,7 +139,7 @@ late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsRes
                               color: Colors.white,
                               child: ListView.separated(
                                 shrinkWrap: true,
-                                itemCount: getTaskSlabDetailsResponse.data.length, // Replace with your task list length
+                                itemCount: getTaskSlabDetailsResponse.data.length-1, // Replace with your task list length
                                 separatorBuilder: (context, index) => Divider(),
                                 itemBuilder: (context, index) {
                                   final task = getTaskSlabDetailsResponse.data[index];
@@ -176,10 +174,13 @@ late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsRes
                                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                                 children: [
                                                 Text(
-                                                  task.transactions.length.toString(),
+                                                  'view',
                                                   style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 18),
+                                                      fontFamily: 'Visbyfregular',
+                                                      color: Color(0xff0a5cff),
+                                                      decoration: TextDecoration.underline,
+
+                                                      fontSize: 15),
                                                 ),
                                                   SizedBox(width: 10,),
                                                   Icon(Icons.arrow_forward_ios_sharp,size: 11,color: Colors.grey,)
@@ -428,8 +429,9 @@ class _SlabDetailsPageState extends State<SlabDetailsPage> {
 
               child:
               Card(
+
                 color: Colors.white,
-                elevation: 2,
+                elevation: 0,
                 margin: EdgeInsets.all(8.0),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -442,7 +444,7 @@ class _SlabDetailsPageState extends State<SlabDetailsPage> {
                             width: 8,
                           ),
                           Container(
-                            height: 40,
+                            height: 20,
 
                           ),
                           SizedBox(
@@ -477,9 +479,9 @@ class _SlabDetailsPageState extends State<SlabDetailsPage> {
                   itemBuilder: (BuildContext context, int index) {
                     // Display the fetched data in a list view
                     return Card(
-                      elevation: 5,
+                      elevation: 3,
                       color: appColors.mainAppColor,
-                      margin: EdgeInsets.all(8.0),
+                      margin: EdgeInsets.all(4.0),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
@@ -491,9 +493,9 @@ class _SlabDetailsPageState extends State<SlabDetailsPage> {
                                   width: 4,
                                 ),
                                 Container(
-                                    height: 40,
+                                    height: 20,
                                     width: 40,
-                                    child: Padding(padding: EdgeInsets.all(8),child: Image.asset(
+                                    child: Padding(padding: EdgeInsets.all(1),child: Image.asset(
                                       "assets/images/earn_ic.png",
                                       color: Colors.white,
                                     ),)),

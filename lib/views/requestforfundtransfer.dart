@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:dio/dio.dart';
@@ -226,7 +227,7 @@ class _FundDipositePageState extends State<FundDipositePage> {
     );
   }
   Future<void> insertDepositRecord(String token, String name,String cspCode, String amount,XFile? image) async {
-
+    EasyLoading.show(status: 'Data Sending...',maskType: EasyLoadingMaskType.black);
     final fileBytes = await image!.readAsBytes();
     final multipartFile = MultipartFile.fromBytes(
       fileBytes,
@@ -239,8 +240,10 @@ class _FundDipositePageState extends State<FundDipositePage> {
       if(value.statusCode==200){
         showAlertDialog( context,value.message);
       }
-
+    EasyLoading.dismiss();
     }).catchError((error){
+      EasyLoading.dismiss();
+
       if(error is DioError){
 
         // DioError is specific to Dio library for handling HTTP errors
@@ -441,14 +444,18 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
   }
 
   Future<void> insertWithDrawalRecord(String token,String cspCode, String amount) async {
+    EasyLoading.show(status: 'Data Sending...',maskType: EasyLoadingMaskType.black);
     final api = Provider.of<ApiService>(context, listen: false);
 
     return await api.uploadWithDrawalData( "Bearer $token", cspCode.trim(),amount.trim(),"W", "0" ,"1").then((value) async {
       if(value.data==1){
         showAlertDialog( context);
       }
+      EasyLoading.dismiss();
 
     }).catchError((error){
+      EasyLoading.dismiss();
+
       if(error is DioError){
 
         // DioError is specific to Dio library for handling HTTP errors

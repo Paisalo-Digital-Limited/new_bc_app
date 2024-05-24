@@ -1,8 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
-import 'dart:ffi';
-import 'dart:ffi';
-import 'dart:ffi';
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -33,6 +29,7 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../model/commissionDetailsResponse.dart';
+import '../model/getTaskSlabDetailsResponse.dart';
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
 import 'package:gif/gif.dart';
@@ -273,209 +270,217 @@ class _ProfilePageState extends State<ProfilePage> {
     _addressController.dispose();
     super.dispose();
   }
+  void _showLogoutAlert(BuildContext context) {
+    QuickAlert.show(
+      context: context,
+      type: QuickAlertType.confirm,
+      title: 'Logout',
+      text: 'Are you sure you want to logout?',
+        backgroundColor: Colors.white,
+        headerBackgroundColor: appColors.mainAppColor,
+        titleColor: Colors.red,
+        textColor: Colors.red,
+      confirmBtnColor: appColors.mainAppColor,
+
+      confirmBtnText: 'Yes',
+      cancelBtnText: 'No',
+      onConfirmBtnTap: () {
+        Navigator.of(context).pop(); // Close the dialog
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>
+              Login()),
+        );
+      },
+      onCancelBtnTap: () {
+        Navigator.of(context).pop(); // Close the dialog
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appColors.mainAppColor,
+      appBar: AppBar(
+
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.logout,color: Colors.white,),
+            onPressed: () {
+              _showLogoutAlert(context);
+
+            },
+          ),
+        ],
+
+        backgroundColor: appColors.mainAppColor,
+      ),
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                GestureDetector(
-                  //onTap: getImage,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _image != null ? FileImage(_image!) : null,
-                    child: _image == null
-                        ? Icon(
-                            Icons.add_a_photo,
-                            size: 50,
-                            color: Colors.grey[800],
-                          )
-                        : null,
-                  ),
+          padding: EdgeInsets.only(left:16.0,right: 16.0,top: 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              GestureDetector(
+                //onTap: getImage,
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey[300],
+                  backgroundImage: _image != null ? FileImage(_image!) : null,
+                  child: _image == null
+                      ? Icon(
+                    Icons.add_a_photo,
+                    size: 50,
+                    color: Colors.grey[800],
+                  )
+                      : null,
                 ),
-                SizedBox(
-                  height: 12,
-                ),
-                Text(
-                  widget.loginResponse.data.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontFamily: 'Visbybold'),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width / 1.5,
-                      child: Card(
-                        shape: Border.all(
-                            width: 0,
-                            color: Colors
-                                .black), // Optional border for visual clarity
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Container(
-                            width: MediaQuery.of(context).size.width / 1.5,
-                            height: 45,
-                            color: Colors.white,
-                            padding: EdgeInsets.only(left: 10, right: 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  widget.loginResponse.data.address,
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: 'Visbyfregular'),
-                                ),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.location_solid,
-                                      color: Colors.green,
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
+              ),
+              SizedBox(
+                height: 12,
+              ),
+              Text(
+                widget.loginResponse.data.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontFamily: 'Visbybold'),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 1.5,
+                    child: Card(
+                      shape: Border.all(
+                          width: 0,
+                          color: Colors
+                              .black), // Optional border for visual clarity
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width / 1.5,
+                          height: 45,
+                          color: Colors.white,
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                widget.loginResponse.data.address,
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'Visbyfregular'),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.location_solid,
+                                    color: Colors.green,
+                                  )
+                                ],
+                              )
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    isLoading == 1
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          )
-                        : GestureDetector(
-                            child: Card(
-                              shape: Border.all(width: 0, color: Colors.black),
-                              child: Container(
-                                alignment: Alignment.center,
-                                height: 45,
-                                width: MediaQuery.of(context).size.width -
-                                    (MediaQuery.of(context).size.width / 1.5 +
-                                        40),
-                                color: Colors.white,
-                                child: Text("GEO TAG",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontFamily: 'Visbyfregular')),
-                              ),
-                            ),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return CustomInputDialog(
-                                    onSubmit: (String pin) {
-                                      String pinCode = pin;
-                                      double latitude =
-                                          _latitude; // Set latitude
-                                      double longitude =
-                                          _longitude; // Set longitude
-                                      String address =
-                                          _currentAddress; // Set address
-                                      _saveDataToApi(pinCode, latitude,
-                                          longitude, address);
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          )
-                  ],
-                ),
-                SizedBox(height: 12.0),
-                Card(
-                  shape: Border.all(
-                      width: 0,
-                      color:
-                          Colors.black), // Optional border for visual clarity
-
-                  child: Container(
-                    height: 45,
-                    color: Colors.white,
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'MOBILE NUMBER',
-                          style: TextStyle(
-                              fontSize: 16, fontFamily: 'Visbyfregular'),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              widget.loginResponse.data.mobile,
-                              style: TextStyle(
-                                  fontSize: 16, fontFamily: 'Visbyfregular'),
-                            ),
-                            Icon(
-                              CupertinoIcons.check_mark_circled_solid,
-                              color: Colors.green,
-                            )
-                          ],
-                        )
-                      ],
-                    ),
                   ),
-                ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => (KYCUpdatePage(widget.loginResponse,widget.username,))));
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
+                  isLoading == 1
+                      ? Center(
+                    child: CircularProgressIndicator(
                       color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                  )
+                      : GestureDetector(
+                    child: Card(
+                      shape: Border.all(width: 0, color: Colors.black),
+                      child: Container(
+                        alignment: Alignment.center,
+                        height: 45,
+                        width: MediaQuery.of(context).size.width -
+                            (MediaQuery.of(context).size.width / 1.5 +
+                                40),
+                        color: Colors.white,
+                        child: Text("GEO TAG",
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Visbyfregular')),
+                      ),
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CustomInputDialog(
+                            onSubmit: (String pin) {
+                              String pinCode = pin;
+                              double latitude =
+                                  _latitude; // Set latitude
+                              double longitude =
+                                  _longitude; // Set longitude
+                              String address =
+                                  _currentAddress; // Set address
+                              _saveDataToApi(pinCode, latitude,
+                                  longitude, address);
+                            },
+                          );
+                        },
+                      );
+                    },
+                  )
+                ],
+              ),
+              SizedBox(height: 12.0),
+              Card(
+                shape: Border.all(
+                    width: 0,
+                    color:
+                    Colors.black), // Optional border for visual clarity
+
+                child: Container(
+                  height: 45,
+                  color: Colors.white,
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'MOBILE NUMBER',
+                        style: TextStyle(
+                            fontSize: 16, fontFamily: 'Visbyfregular'),
+                      ),
+                      Row(
                         children: [
                           Text(
-                            'KYC Update',
+                            widget.loginResponse.data.mobile,
                             style: TextStyle(
                                 fontSize: 16, fontFamily: 'Visbyfregular'),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
+                          Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            color: Colors.green,
                           )
                         ],
-                      ),
-                    ),
+                      )
+                    ],
                   ),
                 ),
-                SizedBox(height: 12.0),
-                Card(
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => (KYCUpdatePage(widget.loginResponse,widget.username,))));
+                },
+                child: Card(
                   shape: Border.all(
                       width: 0,
                       color:
-                          Colors.black), // Optional border for visual clarity
+                      Colors.black), // Optional border for visual clarity
                   child: Container(
                     height: 45,
                     color: Colors.white,
@@ -484,7 +489,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'APPLY FOR LOAN',
+                          'KYC Update',
                           style: TextStyle(
                               fontSize: 16, fontFamily: 'Visbyfregular'),
                         ),
@@ -500,135 +505,165 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (TransactionHistoryPage(
-                            loginResponse: widget.loginResponse,
-                            username: widget.username)),
+              ),
+              SizedBox(height: 12.0),
+              Card(
+                shape: Border.all(
+                    width: 0,
+                    color:
+                    Colors.black), // Optional border for visual clarity
+                child: Container(
+                  height: 45,
+                  color: Colors.white,
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'APPLY FOR LOAN',
+                        style: TextStyle(
+                            fontSize: 16, fontFamily: 'Visbyfregular'),
                       ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Row(
                         children: [
-                          Text(
-                            'TRANSACTION HISTORY',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
+                          Icon(
+                            CupertinoIcons.arrow_right,
+                            color: Colors.green,
                           )
                         ],
-                      ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (TransactionHistoryPage(
+                          loginResponse: widget.loginResponse,
+                          username: widget.username)),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'TRANSACTION HISTORY',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (WithdrawalAndDepositHistory(
-                            loginResponse: widget.loginResponse,
-                            username: widget.username)),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Withdrwal and Deposit History',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (WithdrawalAndDepositHistory(
+                          loginResponse: widget.loginResponse,
+                          username: widget.username)),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Withdrwal and Deposit History',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => (CSPAnnualReportPage()),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    shape: Border.all(
-                        width: 0,
-                        color:
-                            Colors.black), // Optional border for visual clarity
-                    child: Container(
-                      height: 45,
-                      color: Colors.white,
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'CSP Annual Reports',
-                            style: TextStyle(
-                                fontSize: 16, fontFamily: 'Visbyfregular'),
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.arrow_right,
-                                color: Colors.green,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+              ),
+              SizedBox(height: 12.0),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => (CSPAnnualReportPage()),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: Border.all(
+                      width: 0,
+                      color:
+                      Colors.black), // Optional border for visual clarity
+                  child: Container(
+                    height: 45,
+                    color: Colors.white,
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'CSP Annual Reports',
+                          style: TextStyle(
+                              fontSize: 16, fontFamily: 'Visbyfregular'),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.arrow_right,
+                              color: Colors.green,
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
-              ],
-            ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+            ],
           ),
         ),
       ),
@@ -978,7 +1013,7 @@ class _EarningPageState extends State<EarningPage> {
                                   width: 8,
                                 ),
                                 Container(
-                                  width: 60,
+                                  padding: EdgeInsets.only(left: 4,right: 4),
                                   alignment: Alignment.center,
                                   height: 30,
                                   decoration: BoxDecoration(
@@ -1009,7 +1044,7 @@ class _EarningPageState extends State<EarningPage> {
                             Text(
                               "Best month Earnings ₹${bestMonthEarning} (${bestMonth})",
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 15,
                                 color: Colors.white,
                                 fontFamily: 'Visbyfregular',
                               ),
@@ -1115,7 +1150,7 @@ class _EarningPageState extends State<EarningPage> {
                                           },
                                           child: Container(
                                             alignment: Alignment.bottomCenter,
-                                            height: 30,
+
                                             width: 90,
                                             child: Column(
                                               mainAxisAlignment:
@@ -2735,6 +2770,10 @@ class _LeaderBoardState extends State<LeaderBoard>
                                               style: TextStyle(
                                                 fontSize: 15,
                                                 color: Colors.white,
+                                                decorationThickness: 1,
+                                                decoration: TextDecoration.underline,
+
+                                                decorationColor: Colors.white,
                                                 fontWeight: isFirstItem
                                                     ? FontWeight.bold
                                                     : FontWeight.normal,
@@ -2799,8 +2838,9 @@ class _HomePageviewState extends State<HomePageview> {
   late double _opacity = 1.0;
   int isLoading = 0;
   late CommisionDetailsResponse commisionDetailsResponse;
+  late GetTaskSlabDetailsResponse getTaskSlabDetailsResponse=GetTaskSlabDetailsResponse(statusCode: 0, message: "", data: []);
 
-  //CommisionDetailsResponse commisionDetailsResponse=CommisionDetailsResponse(statusCode: 0, message: "",data:);
+
   AppColors appColors = AppColors();
   int targettedAmount = 0;
   int completedAmountPer=0;
@@ -2810,6 +2850,7 @@ class _HomePageviewState extends State<HomePageview> {
   @override
   void initState() {
     getTargetAmount();
+    _getTaskSlabDetails();
     getCommisionDetail();
     super.initState();
 
@@ -2859,7 +2900,34 @@ class _HomePageviewState extends State<HomePageview> {
       }
     });
   }
+  Future<Null> _getTaskSlabDetails() {
 
+    final api = Provider.of<ApiService>(context, listen: false);
+    return api
+        .getTaskSlabDetails()
+        .then((value) {
+      if (value.statusCode == 200) {
+        setState(() {
+          getTaskSlabDetailsResponse = value;
+          //isLoading = 1;
+        });
+      } else {
+        setState(() {
+
+        });
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: 'Sorry, no record found',
+          backgroundColor: Colors.white,
+          titleColor: appColors.mainAppColor,
+          textColor: appColors.mainAppColor,
+          confirmBtnColor: appColors.mainAppColor,
+        );
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -2934,17 +3002,41 @@ class _HomePageviewState extends State<HomePageview> {
                                     color: Colors.black54,
                                     fontFamily: 'Visbyfregular'),
                               ),
-                              Container(
-                                alignment: Alignment.center,
-                                // width: 100,
-                                child: Text(
-                                  '₹${currencyFormatter.format(targettedAmount)}',
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    color: Colors.black,
+                              Padding(padding: EdgeInsets.only(left: 25),child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '₹${currencyFormatter.format(targettedAmount)}',
+                                    style: TextStyle(
+                                      fontSize: 26,
+                                      color: Colors.black,
+                                    ),
                                   ),
-                                ),
-                              ),
+                                  SizedBox(width: 10,),
+                                  completedAmountPer==0?Container(
+                                      height: 14,width: 14,
+                                      child: CircularProgressIndicator(color: appColors.mainAppColor,strokeWidth: 2,)):
+                                  GestureDetector(child: Icon(Icons.info_outlined,color: appColors.mainAppColor,size: 15,),
+                                  onTap: (){
+
+                                    for(int i=0;i<getTaskSlabDetailsResponse.data.length;i++){
+                                      var arr=getTaskSlabDetailsResponse.data[i].slabs.split("-");
+                                      print("check it ${arr[0]}, ${arr[1]}, ${targettedAmount}");
+                                      if( int.parse(arr[0]) <=targettedAmount && int.parse(arr[1])>=targettedAmount ){
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => SlabDetailsPage(getTaskSlabDetailsResponse.data[i]),
+                                            )
+                                        );
+                                      }
+                                    }
+                                  },
+                                  )
+
+                                ],
+                              ),),
+
                               Column(
                                 children: [
                                   Container(

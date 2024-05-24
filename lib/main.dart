@@ -179,17 +179,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    checkForUpdate();
-    //checkForLocalServerUpdate();
-    Timer(
-      Duration(seconds: 5),
-          () => Navigator.pushReplacement(
-        context as BuildContext,
-        MaterialPageRoute(
-          builder: (context) => (Login()),
-        ),
-      ),
-    );
+   // checkForUpdate();
+    checkForLocalServerUpdate();
+    // Timer(
+    //   Duration(seconds: 5),
+    //       () => Navigator.pushReplacement(
+    //     context as BuildContext,
+    //     MaterialPageRoute(
+    //       builder: (context) => (Login()),
+    //     ),
+    //   ),
+    // );
   }
   @override
   Widget build(BuildContext context) {
@@ -292,20 +292,25 @@ class _MyHomePageState extends State<MyHomePage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
+          elevation: 0,
           backgroundColor: Colors.white,
           title: Text('Update Available'),
-          content: Text('A new version of the app is available. Please update to the latest version.'),
+          content: Text('A new version of the app is available. Please update to the latest version.\n\n**Copy link via copy button and paste it on your browser.'),
           actions: <Widget>[
             TextButton(
-              child: Text('Update Now'),
-              onPressed: () {
+              child: Text('Copy Link'),
+              onPressed: () async {
+
+                  await Clipboard.setData(ClipboardData(text: "https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp"));
+                  // copied successfully
+
                 // Navigator.pushReplacement(
                 //   context as BuildContext,
                 //   MaterialPageRoute(
                 //     builder: (context) => (MyWebView(url: url,)),
                 //   ),
                 // );
-                _launchURLBrowser('https://www.geeksforgeeks.org/');
+                //_launchURLBrowser('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
               },
             ),
             TextButton(
