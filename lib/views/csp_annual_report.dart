@@ -135,7 +135,7 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
                   Text("Banking Monthly Ledger",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),)
                   , SizedBox(height: 8),
                   Text("Date: ${DateFormat('yyyy-MM-dd').format(DateTime.now())}"),
-                  Text("Month: ${DateFormat('MMMM').format(DateTime.now())}, Year: ${DateFormat('yyyy').format(DateTime.now())}"),
+                  Text("Month: ${widget.monthYear.split(" ")[0]}, Year: ${widget.monthYear.split(" ")[1]}"),
                   Text("CSP Code: ${cspAnnualReport.data[0].cspCode}"),
                   Text("CSP Name: ${cspAnnualReport.data[0].cspName}"),
                   Text("Circle Name: ${cspAnnualReport.data[0].circleName}"),
