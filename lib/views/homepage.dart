@@ -286,7 +286,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
       confirmBtnText: 'Yes',
       cancelBtnText: 'No',
-      onConfirmBtnTap: () {
+      onConfirmBtnTap: () async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('username',"");
+        prefs.setString('password', "");
         Navigator.of(context).pop(); // Close the dialog
         Navigator.pushReplacement(
           context,
@@ -1024,7 +1027,7 @@ class _EarningPageState extends State<EarningPage> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(30),
                                   ),
-                                  child: Row(
+                                  child:  Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                   profitIncrease==1?Icon(
@@ -1651,20 +1654,25 @@ class _EarningPageState extends State<EarningPage> {
   }
 
   getProfitPercantage() {
-  int percentage=  ((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt();
-   if(percentage<0){
-     setState(() {
-       profitIncrease=1;
-     });
-     return percentage-(2*percentage);
+    if(commisionDetailsResponse.data.transactionDetails.isNotEmpty){
+      int percentage=  ((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt();
+      if(percentage<0){
+        setState(() {
+          profitIncrease=1;
+        });
+        return percentage-(2*percentage);
 
-   }else{
-     setState(() {
-       profitIncrease=0;
+      }else{
+        setState(() {
+          profitIncrease=0;
 
-     });
-     return percentage;
-   }
+        });
+        return percentage;
+      }
+    }else{
+      return 0;
+    }
+
   }
 }
 
@@ -2856,7 +2864,7 @@ class _HomePageviewState extends State<HomePageview> {
 
   AppColors appColors = AppColors();
   int targettedAmount = 0;
-  int completedAmountPer=0;
+  int completedAmountPer=-1;
   final currencyFormatter = NumberFormat('#,##0', 'en_US');
   String bannerUrl = "";
   double expandedHeight = 0;
@@ -2881,7 +2889,7 @@ class _HomePageviewState extends State<HomePageview> {
 
   getBannerUrl() {
     final api = Provider.of<ApiService>(context, listen: false);
-    return api.getBannerImageUrl("D").then((value) {
+    return api.getBannerImageUrl("B").then((value) {
       if (value.data.banner.isNotEmpty) {
         setState(() {
           bannerUrl = value.data.banner;
@@ -3026,7 +3034,7 @@ class _HomePageviewState extends State<HomePageview> {
                                     ),
                                   ),
                                   SizedBox(width: 10,),
-                                  completedAmountPer==0?Container(
+                                  completedAmountPer==-1?Container(
                                       height: 14,width: 14,
                                       child: CircularProgressIndicator(color: appColors.mainAppColor,strokeWidth: 2,)):
                                   GestureDetector(child: Icon(Icons.info_outlined,color: appColors.mainAppColor,size: 15,),
@@ -3068,7 +3076,7 @@ class _HomePageviewState extends State<HomePageview> {
                                     alignment: Alignment.center,
                                     width: 240,
                                     child: Text(
-                                      '${completedAmountPer}% COMPLETED',
+                                      '${completedAmountPer==-1?0:completedAmountPer}% COMPLETED',
                                       style: TextStyle(
                                           fontSize: 12, color: Colors.black),
                                     ),

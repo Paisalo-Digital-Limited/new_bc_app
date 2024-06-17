@@ -50,6 +50,7 @@ class _LoginState extends State<Login> {
 
   @override
   void initState() {
+   _getAutoLogin();
     super.initState();
 
   }
@@ -287,6 +288,7 @@ class _LoginState extends State<Login> {
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
           prefs.setString('username', userName.trim());
+          prefs.setString('password', userPassword.trim());
           LoginResponse loginResponse=value;
           _saveGsmId(loginResponse,userName);
           saveLoginDate(loginResponse);
@@ -454,6 +456,15 @@ class _LoginState extends State<Login> {
       }
     });
 
+  }
+
+  Future<void> _getAutoLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userName=prefs.getString('username');
+    String? password=prefs.getString('password');
+    if(userName!.isNotEmpty && password!.isNotEmpty){
+      _getLogin(userName!, password!);
+    }
   }
 
 

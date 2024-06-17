@@ -82,7 +82,7 @@ class _FundDipositePageState extends State<FundDipositePage> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    final pickedImage = await picker.pickImage(source: ImageSource.camera);
 
     setState(() {
       _image = pickedImage;
