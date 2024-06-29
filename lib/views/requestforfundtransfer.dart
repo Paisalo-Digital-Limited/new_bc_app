@@ -82,7 +82,7 @@ class _FundDipositePageState extends State<FundDipositePage> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.camera);
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
 
     setState(() {
       _image = pickedImage;
@@ -195,7 +195,19 @@ class _FundDipositePageState extends State<FundDipositePage> {
                   ),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              }else{
+              }else if(depositeAmountController.text.isEmpty || int.parse(depositeAmountController.text)==0){
+                QuickAlert.show(
+                  context: context,
+                  type: QuickAlertType.warning,
+                  confirmBtnColor: appColors.mainAppColor,
+                  title: "Amount not found",
+                  text: 'Deposit amount not be blank or zero',
+                  showConfirmBtn: true,
+                  onConfirmBtnTap: (){
+                    Navigator.of(context).pop();
+
+                  }
+              );}else{
                 insertDepositRecord(widget.loginResponse.data.token,widget.loginResponse.data.name,cspCodeController.text,depositeAmountController.text,_image);
               }
 
@@ -389,7 +401,25 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
                 ),
                 onTap: (){
 
-                  insertWithDrawalRecord(widget.loginResponse.data.token,cspCodeController.text,withDrawalAmountController.text);
+                  if(withDrawalAmountController.text.isEmpty || int.parse(withDrawalAmountController.text)==0){
+                    QuickAlert.show(
+                        context: context,
+                        type: QuickAlertType.warning,
+                        confirmBtnColor: appColors.mainAppColor,
+                        title: "Amount not found",
+                        text: 'withdrawal amount not be blank or zero',
+                        showConfirmBtn: true,
+                        onConfirmBtnTap: (){
+                          Navigator.of(context).pop();
+
+                        }
+                    );
+                  }else{
+                    insertWithDrawalRecord(widget.loginResponse.data.token,cspCodeController.text,withDrawalAmountController.text);
+
+                  }
+
+
 
 
                 }

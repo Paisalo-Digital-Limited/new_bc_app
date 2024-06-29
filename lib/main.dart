@@ -182,9 +182,25 @@ class _MyHomePageState extends State<MyHomePage> {
   late String _localPath;
   late bool _permissionReady;
   late TargetPlatform? platform;
+  late AndroidNotificationDetails androidPlatformChannelSpecifics ;
+
+  late NotificationDetails platformChannelSpecifics;
+
   @override
   void initState() {
     super.initState();
+    androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'download_channel', // id
+          'Downloads', // name
+          channelDescription: 'Channel for download notifications',
+          showProgress: true,
+          maxProgress: 100,
+          playSound: false, // Play sound only at 1%
+          importance: Importance.low,
+          priority:   Priority.low,
+        );
+    platformChannelSpecifics=  NotificationDetails(android: androidPlatformChannelSpecifics);
    // checkForUpdate();
     checkForLocalServerUpdate();
     if (Platform.isAndroid) {
@@ -201,6 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //     ),
     //   ),
     // );
+
   }
   @override
   Widget build(BuildContext context) {
@@ -261,44 +278,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return status.isGranted;
   }
-  Future<void> showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
-      'download_channel',
-      'Downloads',
-      channelDescription: 'Channel for download notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      showProgress: true,
-      maxProgress: 100,
-    );
-    const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-      payload: 'item x',
-    );
-  }
 
   Future<void> updateNotification(int progress) async {
-    final AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
-      'download_channel',
-      'Downloads',
-      channelDescription: 'Channel for download notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      showProgress: true,
-      maxProgress: 100,
-      progress: progress,
-    );
-    final NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-      0,
+      0, // Notification ID (keep it same for updates)
       'Downloading Paisalo BC App',
       '$progress%',
       platformChannelSpecifics,
@@ -410,11 +393,11 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               child: Text('Download App'),
               onPressed: () async {
-                downloadApk('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
-                setState(() {
-                  Navigator.of(context).pop();
-                  _showDownloadingDialog(context);
-                });
+                // downloadApk('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
+                // setState(() {
+                //   Navigator.of(context).pop();
+                //   _showDownloadingDialog(context);
+                // });
                   //await Clipboard.setData(ClipboardData(text: "https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp"));
                   // copied successfully
 
@@ -424,7 +407,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 //     builder: (context) => (MyWebView(url: url,)),
                 //   ),
                 // );
-                //_launchURLBrowser('https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp');
+                _launchURLBrowser();
               },
             ),
             TextButton(
@@ -438,7 +421,12 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
+  Future<void> _launchURLBrowser() async {
+    final Uri _url = Uri.parse("https://erpservice.paisalo.in:980/PDL.Mobile.Api/api/ApkApp/Csp");
+    if (!await launchUrl(_url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $_url');
+    }
+  }
   Future<Directory> getExternalDownloadsDirectory() async {
 
       String downloadsPath = await AndroidPathProvider.downloadsPath;
@@ -464,7 +452,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onReceiveProgress: (received, total) {
           if (total != -1) {
             print("Download progress: ${(received / total * 100).toStringAsFixed(0)}%");
-            updateNotification((received / total * 100).toInt());
+           // updateNotification((received / total * 100).toInt());
 
           }
         },

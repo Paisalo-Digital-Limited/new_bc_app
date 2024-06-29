@@ -29,6 +29,7 @@ import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:video_player/video_player.dart';
 import '../model/commissionDetailsResponse.dart';
 import '../model/getTaskSlabDetailsResponse.dart';
 import '../network/api_service.dart';
@@ -1655,7 +1656,8 @@ class _EarningPageState extends State<EarningPage> {
 
   getProfitPercantage() {
     if(commisionDetailsResponse.data.transactionDetails.isNotEmpty){
-      int percentage=  ((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt();
+      int percentage= commisionDetailsResponse.data.myIncomeResult==0?0: ((((bestMonthEarning/30)-(commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate))/((commisionDetailsResponse.data.myIncomeResult.toInt()/currentDate)))*100).toInt();
+      //13236
       if(percentage<0){
         setState(() {
           profitIncrease=1;
@@ -2053,18 +2055,35 @@ int _getDayIndex(String day) {
   int currentDayIndex = DateTime.now().weekday;
   List<String> days = List.generate(7, (index) {
     int dayIndex = (currentDayIndex + index) % 7;
-    print("dayName= ${day} index =${dayIndex}");
+   // print("dayName= ${day} index =${dayIndex}");
     return _getDayNameList(dayIndex);
   });
   return days.indexOf(day);
 }
 
 void getOrganizeData(){
-  for (var data in widget.cspWeeklyLazer.data) {
-    var dayIndex = _getDayIndex(data.dayOfWeek);
-    organizedData[dayIndex]["payableToCSP"] += data.payableToCsp;
+  for(int i=0;i<organizedData.length;i++){
+    for (var data in widget.cspWeeklyLazer.data) {
+      print("${organizedData[i]["dayOfWeek"]}== ${data.dayOfWeek}  == ${data.payableToCsp}");
+
+      if(data.dayOfWeek.toLowerCase().contains(organizedData[i]["dayOfWeek"].toString().toLowerCase())){
+        print("${organizedData[i]["dayOfWeek"]}== ${data.dayOfWeek}  == ${data.payableToCsp}");
+        organizedData[i]["payableToCSP"]=data.payableToCsp;
+      }
+
+
+
+      // var dayIndex = _getDayIndex(data.dayOfWeek);
+      // if(data.dayOfWeek.toLowerCase().contains(organizedData[dayIndex]["dayOfWeek"].toString().toLowerCase())){
+      //   organizedData[dayIndex]["payableToCSP"] = data.payableToCsp;
+      // }
+
+    }
+
   }
 
+  organizedData.map((task) => task["payableToCSP"]).reduce((a, b) => a > b ? a : b);
+//print("maxCommission $maxCommission");
   for (var data in organizedData) {
     double payableToCSP = data["payableToCSP"];
     if (payableToCSP > 9999) {
@@ -2072,8 +2091,10 @@ void getOrganizeData(){
       break;
     } else if (payableToCSP > 1000) {
       divis = 10000;
+      break;
     } else if (payableToCSP > 100) {
       divis = 1000;
+      break;
     }
   }
   }
@@ -2868,6 +2889,7 @@ class _HomePageviewState extends State<HomePageview> {
   final currencyFormatter = NumberFormat('#,##0', 'en_US');
   String bannerUrl = "";
   double expandedHeight = 0;
+  late VideoPlayerController _controller;
   @override
   void initState() {
     getTargetAmount();
@@ -2891,14 +2913,40 @@ class _HomePageviewState extends State<HomePageview> {
     final api = Provider.of<ApiService>(context, listen: false);
     return api.getBannerImageUrl("B").then((value) {
       if (value.data.banner.isNotEmpty) {
-        setState(() {
-          bannerUrl = value.data.banner;
-          if (bannerUrl.length > 2) {
-            expandedHeight = 220;
-          } else {
-            expandedHeight = 0;
-          }
-        });
+
+          setState(() {
+
+            bannerUrl = value.data.banner;
+            if(value.data.banner.endsWith(".mp4")){
+              _controller = VideoPlayerController.network(
+
+                'https://erp.paisalo.in:981/LOSDOC/BannerPost/${bannerUrl}', // Replace with your video URL or asset path
+
+              )..initialize().then((_) {
+
+                setState(() {
+                  _controller.play();
+                  _controller.setLooping(true);
+
+                  Timer.periodic(Duration(seconds: 7), (Timer t) {
+                    setState(() {
+                      _controller.pause();
+                      _controller.setLooping(false);
+                      expandedHeight = 0;
+                    });
+                  });
+                }); // Ensure the first frame is shown after the video is initialized
+
+              });
+            }
+            if (bannerUrl.length > 2) {
+              expandedHeight = 220;
+            } else {
+              expandedHeight = 0;
+            }
+          });
+
+
       }
     });
   }
@@ -2961,8 +3009,8 @@ class _HomePageviewState extends State<HomePageview> {
           expandedHeight: expandedHeight,
           floating: false,
           flexibleSpace: FlexibleSpaceBar(
-            background: bannerUrl.length > 0
-                ? Image.network(
+            background: bannerUrl.length > 0 && expandedHeight>0
+                ? bannerUrl.endsWith(".mp4")? VideoPlayer(_controller): Image.network(
                     'https://erp.paisalo.in:981/LOSDOC/BannerPost/${bannerUrl}',
                     fit: BoxFit.fill,
                   )
@@ -3189,61 +3237,44 @@ class _HomePageviewState extends State<HomePageview> {
                 });*/
                                     showDialog(
                                       context: context,
-                                      barrierDismissible:
-                                          false, // Dialog cannot be dismissed by tapping outside
-                                      //barrierColor: Colors.white70.withOpacity(0.9),
+                                      barrierDismissible: false, // Dialog cannot be dismissed by tapping outside
                                       builder: (BuildContext context) {
                                         return Dialog(
-                                          backgroundColor:
-                                              Colors.white.withOpacity(0.94),
+                                          backgroundColor: Colors.white.withOpacity(0.92),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
+                                            borderRadius: BorderRadius.circular(20.0),
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(20.0),
-                                            child: Container(
-                                              child: Flexible(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Container(
-                                                      width:
-                                                          60, // Adjust width as needed
-                                                      height:
-                                                          60, // Adjust height as needed
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 5,
-                                                        valueColor:
-                                                            AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                                appColors
-                                                                    .mainAppColor),
-                                                      ),
-                                                    ), // Circular Progress Indicator
-                                                    SizedBox(height: 40),
-                                                    Text(
-                                                      'More Tasks\nMore Commission',
-                                                      style: TextStyle(
-                                                        fontSize: 24,
-                                                      ),
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ), // Text indicating the process
-                                                  ],
-                                                ),
-                                              ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min, // Adjust size to fit content
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  width: 60, // Adjust width as needed
+                                                  height: 60, // Adjust height as needed
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 5,
+                                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                                        appColors.mainAppColor),
+                                                  ),
+                                                ), // Circular Progress Indicator
+                                                SizedBox(height: 40),
+                                                Text(
+                                                  'More Tasks\nMore Commission',
+                                                  style: TextStyle(
+                                                    fontSize: 24,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ), // Text indicating the process
+                                              ],
                                             ),
                                           ),
                                         );
                                       },
                                     );
+
                                   },
                                   child: Card(
                                       color: Colors.white,
