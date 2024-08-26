@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
+import '../utils/SaveGeoTags.dart';
 
 class TargetSetPage extends StatefulWidget {
   final LoginResponse loginResponse;
@@ -27,6 +28,8 @@ class _TargetSetPageState extends State<TargetSetPage> {
   @override
   void initState() {
     super.initState();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"TargetSetPage",widget.username);
     pageController.addListener(() {
       setState(() {
         currentPage = pageController.page!.round();

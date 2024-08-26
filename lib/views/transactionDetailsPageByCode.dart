@@ -7,6 +7,7 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 import '../const/AppColors.dart';
 import '../network/api_service.dart';
+import '../utils/SaveGeoTags.dart';
 
 class TransactionDetailsPageByCode extends StatefulWidget {
  final Datum datum;
@@ -22,6 +23,8 @@ class _TransactionDetailsPageByCodeState extends State<TransactionDetailsPageByC
   @override
   void initState() {
     _getTansactionDetailsByCode(widget.datum);
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"TransactionDetailsPageByCode",widget.datum.cspCode);
     super.initState();
   }
   AppColors appColors=AppColors();

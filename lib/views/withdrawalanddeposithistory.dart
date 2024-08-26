@@ -9,6 +9,7 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
+import '../utils/SaveGeoTags.dart';
 
 
 class WithdrawalAndDepositHistory extends StatefulWidget {
@@ -24,6 +25,8 @@ class _WithdrawalAndDepositHistoryState extends State<WithdrawalAndDepositHistor
   @override
   void initState() {
     _getWithdrswalDepositHistory();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"WithdrawalAndDepositHistory",widget.username);
   }
   int apiResponse=1;
 

@@ -83,6 +83,7 @@ class _CSPAnnualReportPageState extends State<CSPAnnualReportPage> {
     var now = DateTime.now();
     var monthFormat = DateFormat.MMMM();
     String monthName = monthFormat.format(now);
+
     _getCSPAnnualReport(widget.monthYear.split(" ")[0]);
   }
   int apiResponse = 1;

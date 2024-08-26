@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_list/toggle_list.dart';
 
 import '../network/api_service.dart';
+import '../utils/SaveGeoTags.dart';
 import 'homepage.dart';
 
 class ServiceAndSchemeList extends StatefulWidget {
@@ -40,6 +41,12 @@ class _ServiceAndSchemeListState extends State<ServiceAndSchemeList> {
     'Scheme 3',
     // Add more schemes
   ];
+  @override
+  void initState() {
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"ServiceAndSchemeList",widget.username);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +112,7 @@ AppColors appColors=new AppColors();
   @override
   void initState() {
     _getServicePage();
+
   }
   @override
   Widget build(BuildContext context) {

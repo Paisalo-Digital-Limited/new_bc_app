@@ -24,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
 import '../const/common.dart';
+import '../utils/SaveGeoTags.dart';
 import 'dashboard.dart';
 import 'welcomepage.dart';
 
@@ -51,6 +52,7 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
    _getAutoLogin();
+
     super.initState();
 
   }
@@ -291,6 +293,8 @@ class _LoginState extends State<Login> {
           prefs.setString('password', userPassword.trim());
           LoginResponse loginResponse=value;
           _saveGsmId(loginResponse,userName);
+          SaveGeoTags apIs=SaveGeoTags();
+          apIs.getTansactionDetailsByCode(context,"Login",userName);
           saveLoginDate(loginResponse);
           EasyLoading.dismiss();
 

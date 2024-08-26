@@ -12,6 +12,7 @@ import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 import '../const/AppColors.dart';
 import '../network/api_service.dart';
+import '../utils/SaveGeoTags.dart';
 
 class AchiverPage extends StatefulWidget {
   final String username;
@@ -27,6 +28,8 @@ class _AchiverPageState extends State<AchiverPage> with TickerProviderStateMixin
   @override
   void initState() {
     _getTaskSlabDetails();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"ProfilePage",widget.username);
     super.initState();
     _controller = GifController(vsync: this);
     showDelayedMessage();

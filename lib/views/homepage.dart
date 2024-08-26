@@ -8,6 +8,7 @@ import 'package:new_bc_app/model/CspMonthlyLazerResponse.dart';
 import 'package:new_bc_app/model/CspWeeklyLazerResponse.dart';
 import 'package:new_bc_app/model/leaderBoardDataResponse.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
+import 'package:new_bc_app/utils/SaveGeoTags.dart';
 import 'package:new_bc_app/utils/currentLocation.dart';
 import 'package:new_bc_app/views/KYCUpdatePage.dart';
 import 'package:new_bc_app/views/LeaderBoardItemDetails.dart';
@@ -263,6 +264,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     _getCurrentLocation();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"ProfilePage",widget.username);
     super.initState();
   }
 
@@ -749,6 +752,7 @@ class _CustomInputDialogState extends State<CustomInputDialog> {
 
   @override
   void initState() {
+
     super.initState();
     _textController = TextEditingController();
   }
@@ -898,6 +902,8 @@ class _EarningPageState extends State<EarningPage> {
     getCommisionDetail();
     getCSPWeeklyLedger();
     getCSPMonthlyLedger();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context, "EarningPage",widget.userName);
 
     super.initState();
     getTargetAmount();
@@ -2536,6 +2542,8 @@ class _LeaderBoardState extends State<LeaderBoard>
     super.initState();
     _controllerGif = GifController(vsync: this);
     _getLeaderBoardData();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"LeaderBoard",widget.username);
   }
 
   @override
@@ -2751,7 +2759,7 @@ class _LeaderBoardState extends State<LeaderBoard>
                                                     color:
                                                         appColors.mainAppColor,
                                                     gradient: isFirstItem
-                                                        ? LinearGradient(
+                                                        ? const LinearGradient(
                                                             colors: [
                                                               Colors.yellow,
                                                               Colors
@@ -2895,10 +2903,9 @@ class _HomePageviewState extends State<HomePageview> {
     getTargetAmount();
     _getTaskSlabDetails();
     getCommisionDetail();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"HomePageView",widget.username);
     super.initState();
-
-
-
     getBannerUrl();
     _scrollController = ScrollController()..addListener(_updateOpacity);
   }
@@ -2923,11 +2930,9 @@ class _HomePageviewState extends State<HomePageview> {
                 'https://erp.paisalo.in:981/LOSDOC/BannerPost/${bannerUrl}', // Replace with your video URL or asset path
 
               )..initialize().then((_) {
-
                 setState(() {
                   _controller.play();
                   _controller.setLooping(true);
-
                   Timer.periodic(Duration(seconds: 7), (Timer t) {
                     setState(() {
                       _controller.pause();
@@ -2945,19 +2950,11 @@ class _HomePageviewState extends State<HomePageview> {
               expandedHeight = 0;
             }
           });
-
+      }else{
 
       }
     });
   }
-
-
-
-
-
-
-
-
   void _updateOpacity() {
     setState(() {
       // You can adjust these values based on your needs

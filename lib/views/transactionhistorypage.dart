@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
+import '../utils/SaveGeoTags.dart';
 import 'homepage.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
@@ -51,6 +52,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   @override
   void initState() {
     _getTransactionHistory();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"TransactionHistoryPage",widget.username);
   }
 
   int apiResponse = 1;
