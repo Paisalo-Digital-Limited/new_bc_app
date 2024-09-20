@@ -319,8 +319,8 @@ class CustomTable extends StatelessWidget {
           children: [
             tableCell('', isHeader: false),
             tableCell('', isHeader: false),
-            tableCell('Applicable TDS (5%)', isHeader: true),
-            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.05).toStringAsFixed(2)}", isHeader: true),
+            tableCell('Applicable TDS (1%)', isHeader: true),
+            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.01).toStringAsFixed(2)}", isHeader: true),
           ],
         ),     TableRow(
           decoration: BoxDecoration(color: Colors.white),
@@ -328,7 +328,7 @@ class CustomTable extends StatelessWidget {
             tableCell('', isHeader: false),
             tableCell('', isHeader: false),
             tableCell('Payable Commission', isHeader: true),
-            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.95).toStringAsFixed(2)}", isHeader: true),
+            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.99).toStringAsFixed(2)}", isHeader: true),
           ],
         ),
       ],

@@ -52,10 +52,8 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
    _getAutoLogin();
-
     super.initState();
-
-  }
+                   }
 
 
   bool _isObscure = true;
@@ -475,3 +473,7 @@ class _LoginState extends State<Login> {
 
 
 }
+
+
+
+

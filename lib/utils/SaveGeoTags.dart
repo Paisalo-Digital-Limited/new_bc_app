@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:provider/provider.dart';
 
@@ -8,7 +6,6 @@ import 'currentLocation.dart';
 
 class SaveGeoTags{
   var _latitude=0.0;
-
   var _longitude=0.0;
 
 
