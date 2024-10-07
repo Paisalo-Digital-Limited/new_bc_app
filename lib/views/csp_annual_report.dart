@@ -278,12 +278,13 @@ class CustomTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Table(
       columnWidths: {
-        0: FractionColumnWidth(0.13),  // 10% of the table width
-        1: FractionColumnWidth(0.47),  // 50% of the table width
+        0: FractionColumnWidth(0.09),  // 10% of the table width
+        1: FractionColumnWidth(0.36),  // 50% of the table width
         2: FractionColumnWidth(0.2),  // 20% of the table width
         3: FractionColumnWidth(0.2),  // 20% of the table width
+        4: FractionColumnWidth(0.15),  // 20% of the table width
       },
-      border: TableBorder.all(),
+      border: TableBorder.all(width: .3),
       children: [
         TableRow(
           decoration: BoxDecoration(color: Colors.grey[200]),
@@ -292,6 +293,7 @@ class CustomTable extends StatelessWidget {
             tableCell('Description with Code', isHeader: true),
             tableCell('TXN Count', isHeader: true),
             tableCell('Commission Amount', isHeader: true),
+            tableCell('GST @18%', isHeader: true),
           ],
         ),
         ...data.asMap().entries.map((entry) {
@@ -303,6 +305,7 @@ class CustomTable extends StatelessWidget {
               tableCell(record.transactionType),
               tableCell(record.numTransactionsOrAvgBal.toString()),
               tableCell(record.payableToCsp.toString()),
+              tableCell(record.gst.toString()),
             ],
           );
         }).toList(),
@@ -313,6 +316,8 @@ class CustomTable extends StatelessWidget {
             tableCell('', isHeader: false),
             tableCell('Total Commission', isHeader: true),
             tableCell("${data.fold(0.00, (sum, item) => sum + item.payableToCsp.toDouble()).toStringAsFixed(2)}", isHeader: true),
+            tableCell('', isHeader: false),
+
           ],
         ),      TableRow(
           decoration: BoxDecoration(color: Colors.white),
@@ -321,14 +326,31 @@ class CustomTable extends StatelessWidget {
             tableCell('', isHeader: false),
             tableCell('Applicable TDS (1%)', isHeader: true),
             tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.01).toStringAsFixed(2)}", isHeader: true),
+            tableCell('', isHeader: false),
+
           ],
-        ),     TableRow(
+        ),
+        TableRow(
+          decoration: BoxDecoration(color: Colors.white),
+          children: [
+            tableCell('', isHeader: false),
+            tableCell('', isHeader: false),
+            tableCell('GST @18%', isHeader: true),
+            tableCell("${(data.fold(0.0, (sum, item) => sum + item.gst.toDouble())).toStringAsFixed(2)}", isHeader: true),
+            tableCell('', isHeader: false),
+
+          ],
+        ),
+
+        TableRow(
           decoration: BoxDecoration(color: Colors.white),
           children: [
             tableCell('', isHeader: false),
             tableCell('', isHeader: false),
             tableCell('Payable Commission', isHeader: true),
-            tableCell("${(data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.99).toStringAsFixed(2)}", isHeader: true),
+            tableCell("${((data.fold(0.0, (sum, item) => sum + item.payableToCsp.toDouble()) * 0.99)-(data.fold(0.0, (sum, item) => sum + item.gst.toDouble()))).toStringAsFixed(2)}", isHeader: true),
+            tableCell('', isHeader: false),
+
           ],
         ),
       ],
@@ -337,14 +359,14 @@ class CustomTable extends StatelessWidget {
 
   Widget tableCell(String text, {bool isHeader = false}) {
     return Container(
-      padding: EdgeInsets.all(8),
-      alignment: Alignment.center,
+      padding: EdgeInsets.all(4),
       child: Text(
         text,
         style: TextStyle(
           fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-          fontSize: isHeader ? 10 : 8,
+          fontSize: isHeader ? 10 : 10,
         ),
+        textAlign: TextAlign.left,
       ),
     );
   }

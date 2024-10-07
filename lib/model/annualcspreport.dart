@@ -44,6 +44,7 @@ class Datum {
   double payableToCsp;
   String year;
   String month;
+  int gst;
 
   Datum({
     required this.circleName,
@@ -56,6 +57,7 @@ class Datum {
     required this.payableToCsp,
     required this.year,
     required this.month,
+    required this.gst
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
@@ -69,6 +71,7 @@ class Datum {
     payableToCsp: json["payableToCSP"]?.toDouble(),
     year: json["year"]??"",
     month: json["month"]??"",
+    gst: json["gst"]??0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -82,6 +85,7 @@ class Datum {
     "payableToCSP": payableToCsp,
     "year": year,
     "month": month,
+    "gst": gst
   };
 }
 
