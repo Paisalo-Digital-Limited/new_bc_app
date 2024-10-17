@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/model/transhistoryresponse.dart';

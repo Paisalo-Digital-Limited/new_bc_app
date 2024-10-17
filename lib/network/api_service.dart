@@ -145,8 +145,6 @@ abstract class ApiService{
   @POST("User/BcuserInsertTracking")
   Future<CommonResponseModel> getBcUserInsertTracking(@Query("cspcode") String cspcode,@Query("activity") String activity,@Query("latitude") String latitude,@Query("longitude") String longitude);
 
-
-
 }
 
 
