@@ -44,7 +44,7 @@ class Datum {
   double payableToCsp;
   String year;
   String month;
-  int gst;
+  double gst;
 
   Datum({
     required this.circleName,

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:android_path_provider/android_path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart'as http;
@@ -15,7 +13,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:package_info/package_info.dart';
+
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -427,50 +426,50 @@ class _MyHomePageState extends State<MyHomePage> {
       throw Exception('Could not launch $_url');
     }
   }
-  Future<Directory> getExternalDownloadsDirectory() async {
-
-      String downloadsPath = await AndroidPathProvider.downloadsPath;
-      return Directory(downloadsPath);
-
-  }
-  Future<void> downloadApk(String url) async {
-    setState(() {
-      apkDownloaded=2;
-    });
-    try {
-      // Get the application directory to store the downloaded file
-      Directory appDocDir = await getExternalDownloadsDirectory();
-      String savePath = "${appDocDir.path}/paisalo_bc_app.apk";
-
-      // Create a Dio instance
-      Dio dio = Dio();
-
-      // Download the APK file
-      await dio.download(
-        url,
-        savePath,
-        onReceiveProgress: (received, total) {
-          if (total != -1) {
-            print("Download progress: ${(received / total * 100).toStringAsFixed(0)}%");
-           // updateNotification((received / total * 100).toInt());
-
-          }
-        },
-      );
-
-      print("APK downloaded to: $savePath");
-      setState(() {
-        apkDownloaded=1;
-        cancelNotification();
-        Navigator.of(context).pop();
-        _showDownloadedDialog(context);
-      });
-
-    } catch (e) {
-      print("Error downloading APK: $e");
-      await cancelNotification();
-    }
-  }
+  // Future<Directory> getExternalDownloadsDirectory() async {
+  //
+  //     String downloadsPath = await AndroidPathProvider.downloadsPath;
+  //     return Directory(downloadsPath);
+  //
+  // }
+  // Future<void> downloadApk(String url) async {
+  //   setState(() {
+  //     apkDownloaded=2;
+  //   });
+  //   try {
+  //     // Get the application directory to store the downloaded file
+  //     Directory appDocDir = await getExternalDownloadsDirectory();
+  //     String savePath = "${appDocDir.path}/paisalo_bc_app.apk";
+  //
+  //     // Create a Dio instance
+  //     Dio dio = Dio();
+  //
+  //     // Download the APK file
+  //     await dio.download(
+  //       url,
+  //       savePath,
+  //       onReceiveProgress: (received, total) {
+  //         if (total != -1) {
+  //           print("Download progress: ${(received / total * 100).toStringAsFixed(0)}%");
+  //          // updateNotification((received / total * 100).toInt());
+  //
+  //         }
+  //       },
+  //     );
+  //
+  //     print("APK downloaded to: $savePath");
+  //     setState(() {
+  //       apkDownloaded=1;
+  //       cancelNotification();
+  //       Navigator.of(context).pop();
+  //       _showDownloadedDialog(context);
+  //     });
+  //
+  //   } catch (e) {
+  //     print("Error downloading APK: $e");
+  //     await cancelNotification();
+  //   }
+  // }
 
   Future<void> cancelNotification() async {
     await flutterLocalNotificationsPlugin.cancel(0);
