@@ -329,7 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String buildNumber = packageInfo.buildNumber;
   print("App version ${appVersion}, Build Number ${buildNumber}");
 
-    String baseUrl = 'https://erpservice.paisalo.in:980/PDL.Mobile.API/api';
+    String baseUrl = 'https://pdlmobile.paisalo.in:983/api';
     String endpoint = '/LiveTrack/GetAppLink';
     String queryParams = '?version=${appVersion}&AppName=B&action=1';
     String fullUrl = baseUrl + endpoint + queryParams;

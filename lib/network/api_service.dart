@@ -29,7 +29,8 @@ import '../model/withdrawalanddepsitmodel.dart';
 
 part 'api_service.g.dart';
 //1A999096
-@RestApi(baseUrl: "https://erpservice.paisalo.in:980/PDL.BC.Api/api/")
+// @RestApi(baseUrl: "https://erpservice.paisalo.in:980/PDL.BC.Api/api/")
+@RestApi(baseUrl: "https://bc.paisalo.in:987/api/")
 abstract class ApiService{
   factory ApiService(Dio dio,{String baseUrl}) = _ApiService;
 
