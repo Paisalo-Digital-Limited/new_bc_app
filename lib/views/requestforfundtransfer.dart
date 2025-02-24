@@ -1,16 +1,23 @@
+import 'dart:typed_data';
+
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_container.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'dart:io';
+import 'package:path/path.dart' as path;
 
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
+import '../utils/SaveGeoTags.dart';
 
 class RequestForFundTransfer extends StatefulWidget {
   final LoginResponse loginResponse;
@@ -91,6 +98,13 @@ class _FundDipositePageState extends State<FundDipositePage> {
   TextEditingController depositeAmountController = new TextEditingController();
   TextEditingController cspCodeController = new TextEditingController();
 
+    @override
+  void initState() {
+      SaveGeoTags apIs=SaveGeoTags();
+      apIs.getTansactionDetailsByCode(context,"FundDepositPage",widget.userName);
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +208,19 @@ class _FundDipositePageState extends State<FundDipositePage> {
                   ),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              }else{
+              }else if(depositeAmountController.text.isEmpty || int.parse(depositeAmountController.text)==0){
+                QuickAlert.show(
+                  context: context,
+                  type: QuickAlertType.warning,
+                  confirmBtnColor: appColors.mainAppColor,
+                  title: "Amount not found",
+                  text: 'Deposit amount not be blank or zero',
+                  showConfirmBtn: true,
+                  onConfirmBtnTap: (){
+                    Navigator.of(context).pop();
+
+                  }
+              );}else{
                 insertDepositRecord(widget.loginResponse.data.token,widget.loginResponse.data.name,cspCodeController.text,depositeAmountController.text,_image);
               }
 
@@ -225,8 +251,33 @@ class _FundDipositePageState extends State<FundDipositePage> {
       }
     );
   }
-  Future<void> insertDepositRecord(String token, String name,String cspCode, String amount,XFile? image) async {
+  Future<int> getFileSize(File file) async {
+    return await file.length();
+  }
+  Future<File> compressFile(File file) async {
+    final filePath = file.absolute.path;
+    final fileBytes = await file.readAsBytes();
 
+    // Compress the file
+    final compressedBytes = await FlutterImageCompress.compressWithList(
+      fileBytes,
+      minWidth: 800,  // Adjust based on your needs
+      minHeight: 800, // Adjust based on your needs
+      quality: 60,    // Adjust based on your needs
+    );
+
+    // Get the directory to save the compressed file
+    final tempDir = await getTemporaryDirectory();
+    final compressedFilePath = path.join(tempDir.path, 'compressed_${path.basename(filePath)}');
+    final compressedFile = File(compressedFilePath);
+
+    // Write the compressed bytes to the file
+    await compressedFile.writeAsBytes(compressedBytes);
+
+    return compressedFile;
+  }
+  Future<void> insertDepositRecord(String token, String name,String cspCode, String amount,XFile? image) async {
+    EasyLoading.show(status: 'Data Sending...',maskType: EasyLoadingMaskType.black);
     final fileBytes = await image!.readAsBytes();
     final multipartFile = MultipartFile.fromBytes(
       fileBytes,
@@ -235,12 +286,16 @@ class _FundDipositePageState extends State<FundDipositePage> {
     final api = Provider.of<ApiService>(context, listen: false);
 
     File file = File(image!.path);
-    return await api.uploadDepositeData( name, cspCode.trim(),amount.trim(),"D", "0" ,"1",file).then((value) async {
+     final compressedBytes = await compressFile(file);
+
+    return await api.uploadDepositeData( name, cspCode.trim(),amount.trim(),"D", "0" ,"1",compressedBytes).then((value) async {
       if(value.statusCode==200){
         showAlertDialog( context,value.message);
       }
-
+    EasyLoading.dismiss();
     }).catchError((error){
+      EasyLoading.dismiss();
+
       if(error is DioError){
 
         // DioError is specific to Dio library for handling HTTP errors
@@ -321,6 +376,13 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
   TextEditingController cspCodeController = new TextEditingController();
 
   AppColors appColors = new AppColors();
+
+  @override
+  void initState() {
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"FundWithdrawalPage",widget.userName);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -386,7 +448,25 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
                 ),
                 onTap: (){
 
-                  insertWithDrawalRecord(widget.loginResponse.data.token,cspCodeController.text,withDrawalAmountController.text);
+                  if(withDrawalAmountController.text.isEmpty || int.parse(withDrawalAmountController.text)==0){
+                    QuickAlert.show(
+                        context: context,
+                        type: QuickAlertType.warning,
+                        confirmBtnColor: appColors.mainAppColor,
+                        title: "Amount not found",
+                        text: 'withdrawal amount not be blank or zero',
+                        showConfirmBtn: true,
+                        onConfirmBtnTap: (){
+                          Navigator.of(context).pop();
+
+                        }
+                    );
+                  }else{
+                    insertWithDrawalRecord(widget.loginResponse.data.token,cspCodeController.text,withDrawalAmountController.text);
+
+                  }
+
+
 
 
                 }
@@ -441,14 +521,18 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
   }
 
   Future<void> insertWithDrawalRecord(String token,String cspCode, String amount) async {
+    EasyLoading.show(status: 'Data Sending...',maskType: EasyLoadingMaskType.black);
     final api = Provider.of<ApiService>(context, listen: false);
 
     return await api.uploadWithDrawalData( "Bearer $token", cspCode.trim(),amount.trim(),"W", "0" ,"1").then((value) async {
       if(value.data==1){
         showAlertDialog( context);
       }
+      EasyLoading.dismiss();
 
     }).catchError((error){
+      EasyLoading.dismiss();
+
       if(error is DioError){
 
         // DioError is specific to Dio library for handling HTTP errors
@@ -512,4 +596,8 @@ class _FundWithdrawalPageState extends State<FundWithdrawalPage> {
     });
   }
 }
+
+
+
+
 

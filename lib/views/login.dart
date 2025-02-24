@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:new_bc_app/const/AppColors.dart';
 import 'package:new_bc_app/model/commonresponsemodel.dart';
+import 'package:new_bc_app/model/commonresponsemodelInt.dart';
 import 'package:new_bc_app/model/loginresponse.dart';
 import 'package:new_bc_app/views/homepage.dart';
 import 'package:new_bc_app/views/operationselect.dart';
@@ -23,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
 import '../const/common.dart';
+import '../utils/SaveGeoTags.dart';
 import 'dashboard.dart';
 import 'welcomepage.dart';
 
@@ -49,9 +51,9 @@ class _LoginState extends State<Login> {
 
   @override
   void initState() {
+   _getAutoLogin();
     super.initState();
-
-  }
+                   }
 
 
   bool _isObscure = true;
@@ -286,8 +288,11 @@ class _LoginState extends State<Login> {
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
           prefs.setString('username', userName.trim());
+          prefs.setString('password', userPassword.trim());
           LoginResponse loginResponse=value;
           _saveGsmId(loginResponse,userName);
+          SaveGeoTags apIs=SaveGeoTags();
+          apIs.getTansactionDetailsByCode(context,"Login",userName);
           saveLoginDate(loginResponse);
           EasyLoading.dismiss();
 
@@ -413,7 +418,7 @@ class _LoginState extends State<Login> {
           prefs.getString("GSMID")!).then((value) async {
         if (value != null) {
 
-          CommonResponseModel loginResponse=value;
+          CommonResponseModelInt loginResponse=value;
           //saveLoginDate(loginResponse);
 
 
@@ -455,7 +460,20 @@ class _LoginState extends State<Login> {
 
   }
 
+  Future<void> _getAutoLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userName=prefs.getString('username');
+    String? password=prefs.getString('password');
+    if(userName!.isNotEmpty && password!.isNotEmpty){
+      _getLogin(userName!, password!);
+    }
+  }
+
 
 
 
 }
+
+
+
+

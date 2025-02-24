@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_service.dart';
 import '../const/AppColors.dart';
+import '../utils/SaveGeoTags.dart';
 
 class TargetSetPage extends StatefulWidget {
   final LoginResponse loginResponse;
@@ -27,6 +28,8 @@ class _TargetSetPageState extends State<TargetSetPage> {
   @override
   void initState() {
     super.initState();
+    SaveGeoTags apIs=SaveGeoTags();
+    apIs.getTansactionDetailsByCode(context,"TargetSetPage",widget.username);
     pageController.addListener(() {
       setState(() {
         currentPage = pageController.page!.round();
@@ -44,16 +47,14 @@ class _TargetSetPageState extends State<TargetSetPage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
       home: Scaffold(
         backgroundColor: appColors.mainAppColor,
         body: Stack(
           children: [
-
             Center(
                 child: Container(
-                  width: 330, // Adjust the width as needed
-                  height: 360,
+                  width: MediaQuery.of(context).size.width-30, // Adjust the width as needed
+                  height: MediaQuery.of(context).size.height/2,
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage(
@@ -69,13 +70,13 @@ class _TargetSetPageState extends State<TargetSetPage> {
                       // Replace 'assets/your_image.svg' with your SVG file path
                       Image(
                         image: AssetImage('assets/images/paisa_logo.png'),
-                        height: 60,
+                        height: MediaQuery.of(context).size.height/10,
                         width: 140,
                       ),
                       SizedBox(height: 15),
                       Image(
                         image: AssetImage('assets/images/money_ic.png'),
-                        height: 30,
+                        height: MediaQuery.of(context).size.height/20,
                         width: 50,
                       ),
                       SizedBox(height: 15),
